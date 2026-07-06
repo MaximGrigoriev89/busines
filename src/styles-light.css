@@ -1,0 +1,965 @@
+:root {
+  color-scheme: light;
+  --page: #eef2f7;
+  --app: #f8fafc;
+  --surface: #ffffff;
+  --surface-soft: #f1f5f9;
+  --surface-tint: #f8fafc;
+  --line: #d7dee9;
+  --line-strong: #b8c3d3;
+  --text: #172033;
+  --muted: #64748b;
+  --muted-soft: #94a3b8;
+  --blue: #2563eb;
+  --blue-soft: #dbeafe;
+  --cyan: #0284c7;
+  --green: #16a34a;
+  --green-soft: #dcfce7;
+  --yellow: #f59e0b;
+  --yellow-soft: #fef3c7;
+  --red: #dc2626;
+  --red-soft: #fee2e2;
+  --purple: #7c3aed;
+  --shadow: 0 18px 46px rgba(30, 41, 59, 0.12);
+}
+
+body {
+  background:
+    linear-gradient(180deg, #f8fafc 0%, var(--page) 56%, #e8eef7 100%);
+  color: var(--text);
+}
+
+button {
+  color: inherit;
+}
+
+.app-shell {
+  background: var(--app);
+  box-shadow: var(--shadow);
+}
+
+.content-scroll {
+  background: var(--app);
+}
+
+.top-bar,
+.goal-panel,
+.main-sections > .panel,
+.business-list-panel,
+.detail-panel.business-page,
+.modal-box,
+.ad-box {
+  border-color: var(--line);
+  background: var(--surface);
+  box-shadow: 0 8px 22px rgba(30, 41, 59, 0.08);
+}
+
+.goal-panel,
+.panel,
+.detail-panel {
+  border-color: var(--line);
+  background: var(--surface);
+  color: var(--text);
+}
+
+.top-bar {
+  background: linear-gradient(180deg, #ffffff, #eef6ff);
+}
+
+.money-pill,
+.top-actions .money-pill,
+.reset-button,
+.gem-ad-button,
+.goal-claim,
+.back-button,
+.business-card-open,
+.manager-card-action,
+.premium-manager-button,
+.level-badge,
+.bench-count,
+.requirement-section-head span {
+  border-color: var(--line);
+  background: var(--surface-tint);
+  color: var(--text);
+}
+
+.money-pill {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+.coin {
+  background: var(--green-soft);
+  color: var(--green);
+}
+
+.income-pill {
+  border-color: #bbf7d0;
+  background: #f0fdf4;
+}
+
+.income-pill.boosted {
+  border-color: #f59e0b;
+  background: #fffbeb;
+}
+
+.income-pill.boosted em {
+  color: #b45309;
+}
+
+.income-pill span,
+.business-card-meta small,
+.timer-row,
+.goal-caption,
+.category-star-row > span,
+.compact-manager-card small,
+.locked-business-line,
+.category-label,
+.detail-block-head em,
+.business-summary-text,
+.optimization-stat span,
+.optimization-stat small,
+.optimization-impact span,
+.requirement-text,
+.equipment-option small,
+.catalog-option-main small,
+.catalog-option-price.muted,
+.empty-detail,
+.empty-modal,
+.victory p,
+.reward-tier,
+.ad-hint-card small,
+.ad-result small,
+.offline-income-modal p,
+.text-slate-500,
+.text-slate-600 {
+  color: var(--muted) !important;
+}
+
+.income-pill strong,
+.business-card-meta strong,
+.optimization-stat strong,
+.upgrade-preview-main strong,
+.equipment-option small,
+.catalog-option-price,
+.manager-efficiency.good {
+  color: var(--green);
+}
+
+.section-title,
+.business-list-head strong,
+.business-card-title,
+.detail-block-head strong,
+.requirement-section-head,
+.ad-question,
+.offline-income-modal h2,
+.compact-manager-card,
+.manager-badge-text,
+.requirement-row-title,
+.business-level-stars span,
+.ad-hint-card strong,
+.reward-income-flow span,
+.reward-income-flow strong {
+  color: var(--text);
+}
+
+.goal-panel.complete,
+.business-card.collectable,
+.manager-frame.collectable,
+.optimization-stat.next,
+.requirement-row.done,
+.expansion-complete,
+.reward-gain,
+.ad-result.correct,
+.offline-income-icon,
+.offline-income-amount {
+  border-color: #86efac;
+  background: #f0fdf4;
+  color: #15803d;
+}
+
+.goal-claim.ready,
+.business-card.unlock-ready,
+.business-open-action,
+.manager-card-action,
+.optimization-badge,
+.business-level-stars.compact,
+.reward-gem,
+.ad-slogan {
+  border-color: #fbbf24;
+  background: #fffbeb;
+  color: #92400e;
+}
+
+.business-list-head {
+  border-color: var(--line);
+  background: linear-gradient(180deg, #ffffff, #f1f5f9);
+}
+
+.business-list {
+  background: #edf3fa;
+}
+
+.business-card,
+.requirement-row,
+.manager-slot,
+.manager-badge,
+.manager-frame,
+.empty-manager,
+.upgrade-row,
+.business-info-block,
+.business-facts span,
+.business-summary-icon,
+.empty-portrait,
+.optimization-stat,
+.equipment-option,
+.catalog-option,
+.reward-income-flow,
+.ad-hint-card,
+.ad-result,
+.manager-choice,
+.manager-info-card,
+.business-card-meta span {
+  border-color: var(--line);
+  background: var(--surface);
+  color: var(--text);
+}
+
+.business-card {
+  box-shadow: 0 8px 18px rgba(30, 41, 59, 0.06);
+}
+
+.business-card.selected {
+  border-color: #60a5fa;
+  box-shadow: inset 0 0 0 1px rgba(37, 99, 235, 0.22), 0 8px 20px rgba(37, 99, 235, 0.1);
+}
+
+.manager-frame.action {
+  border-color: #93c5fd;
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.business-card.locked,
+.manager-card-action:disabled,
+.premium-manager-button:disabled,
+.tab.locked {
+  border-color: var(--line);
+  background: #f8fafc;
+  color: var(--muted-soft);
+}
+
+.business-card.collectable {
+  box-shadow: inset 0 0 0 1px rgba(22, 163, 74, 0.18), 0 10px 22px rgba(22, 163, 74, 0.1);
+}
+
+.business-card.auto-active {
+  box-shadow: inset 0 0 0 1px rgba(124, 58, 237, 0.16), 0 8px 18px rgba(30, 41, 59, 0.06);
+}
+
+.business-card.merged-business {
+  border-color: #f3c76a;
+  background: linear-gradient(135deg, #fffdf4, #f8fafc);
+  box-shadow: inset 0 0 0 1px rgba(245, 158, 11, 0.14), 0 10px 22px rgba(146, 64, 14, 0.08);
+}
+
+.business-card.merged-business .business-card-title {
+  color: #7c2d12;
+}
+
+.business-card.merged-business .business-card-meta span {
+  border-color: #fed7aa;
+  background: #fff7ed;
+}
+
+.business-card.merged-business .biz-icon {
+  background: #fff7ed;
+  color: #92400e;
+}
+
+.business-card.merged-business .biz-art-thumb img {
+  filter: drop-shadow(0 12px 13px rgba(146, 64, 14, 0.18));
+}
+
+.business-card.merged-business .business-card-open {
+  border-color: #fed7aa;
+  background: #fffbeb;
+  color: #92400e;
+}
+
+.merger-panel {
+  border-color: #f3c76a;
+  background: linear-gradient(180deg, #ffffff, #fffbeb);
+  box-shadow: inset 0 0 0 1px rgba(245, 158, 11, 0.08), 0 8px 22px rgba(146, 64, 14, 0.08);
+}
+
+.merger-head .section-title {
+  color: #7c2d12;
+}
+
+.merger-head .section-title svg {
+  color: #d97706;
+}
+
+.merger-state {
+  border-color: var(--line);
+  background: #f8fafc;
+  color: var(--muted);
+}
+
+.merger-panel.ready .merger-state {
+  border-color: #86efac;
+  background: #f0fdf4;
+  color: #15803d;
+}
+
+.merger-panel.merged .merger-state {
+  border-color: #f3c76a;
+  background: #fffbeb;
+  color: #92400e;
+}
+
+.merger-emblem {
+  border-color: #f3c76a;
+  background: #fff7ed;
+  color: #d97706;
+  box-shadow: inset 0 0 0 1px rgba(245, 158, 11, 0.12);
+}
+
+.holding-income-stream span {
+  border-color: #86efac;
+  background: #f0fdf4;
+  color: #15803d;
+  box-shadow: 0 5px 12px rgba(22, 163, 74, 0.14);
+}
+
+.merger-copy strong {
+  color: var(--text);
+}
+
+.merger-copy span {
+  color: var(--muted);
+}
+
+.merger-action {
+  border-color: var(--line);
+  background: #f1f5f9;
+  color: #94a3b8;
+  box-shadow: none;
+  opacity: 1;
+}
+
+.merger-panel.ready .merger-action {
+  border-color: #f59e0b;
+  background: linear-gradient(135deg, #facc15, #f59e0b);
+  color: #422006;
+  box-shadow: 0 8px 18px rgba(245, 158, 11, 0.16);
+}
+
+.merger-panel.merged .merger-action {
+  border-color: #86efac;
+  background: #f0fdf4;
+  color: #15803d;
+  box-shadow: none;
+}
+
+.merger-metric {
+  min-height: 20px;
+  padding: 3px 7px;
+  border: 1px solid #ead7b2;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.68);
+}
+
+.merger-metric small {
+  color: #92400e;
+}
+
+.merger-metric small svg {
+  color: #f59e0b;
+}
+
+.merger-metric strong {
+  color: #334155;
+}
+
+.merger-metric.boost strong {
+  color: #d97706;
+}
+
+.merger-progress {
+  border-color: #f3c76a;
+  background: #fdecc8;
+}
+
+.merger-progress .group-fill {
+  background: linear-gradient(90deg, #f59e0b, #22c55e);
+}
+
+.biz-art-thumb::after {
+  background: radial-gradient(ellipse at center, rgba(51, 65, 85, 0.24), transparent 68%);
+}
+
+.biz-art-thumb img {
+  filter: drop-shadow(0 12px 13px rgba(30, 41, 59, 0.2));
+}
+
+.biz-art-thumb.locked-art {
+  opacity: 0.5;
+  filter: saturate(0.68) contrast(0.96);
+}
+
+.biz-art-thumb.undiscovered-art {
+  opacity: 1;
+  filter: none;
+}
+
+.biz-art-thumb.undiscovered-art img {
+  opacity: 0.28;
+  filter: brightness(0) saturate(0) drop-shadow(0 12px 12px rgba(51, 65, 85, 0.18));
+}
+
+.biz-icon,
+.portrait,
+.equipment-option span,
+.catalog-option-icon,
+.requirement-state {
+  background: #e0f2fe;
+  color: #0f172a;
+}
+
+.locked-icon,
+.condition-pips i {
+  background: #e2e8f0;
+  color: #cbd5e1;
+}
+
+.category-star {
+  background: transparent;
+  color: #cbd5e1;
+  text-shadow: none;
+}
+
+.progress-track,
+.business-progress,
+.upgrade-build-bar,
+.requirement-bar {
+  border-color: #cbd5e1;
+  background: #e2e8f0;
+}
+
+.business-progress span {
+  color: #0f172a;
+  text-shadow: none;
+}
+
+.goal-fill,
+.business-progress.ready .business-progress-fill,
+.upgrade-build-bar div {
+  background: linear-gradient(90deg, var(--green), #f59e0b);
+}
+
+.group-fill,
+.business-progress-fill,
+.requirement-bar div {
+  background: linear-gradient(90deg, #0ea5e9, var(--green));
+}
+
+.business-progress.auto .business-progress-fill {
+  background: linear-gradient(90deg, var(--blue), var(--green), var(--blue));
+  background-size: 200% 100%;
+}
+
+.business-progress.merged {
+  border-color: #f3c76a;
+  background: #fff7ed;
+}
+
+.business-progress.merged .business-progress-fill {
+  background: linear-gradient(90deg, #f59e0b, #22c55e);
+}
+
+.tabs {
+  border-color: var(--line);
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 -8px 22px rgba(30, 41, 59, 0.08);
+}
+
+.tab {
+  border-color: var(--line);
+  background: #f8fafc;
+  color: var(--muted);
+}
+
+.tab.active {
+  border-color: #f59e0b;
+  background: #fffbeb;
+  color: var(--text);
+  box-shadow: inset 0 0 0 1px rgba(245, 158, 11, 0.22);
+}
+
+.tab:not(.active) .tab-stars {
+  color: #94a3b8;
+}
+
+.tab.locked .tab-stars {
+  color: #cbd5e1;
+}
+
+.tab-lock {
+  color: #cbd5e1;
+}
+
+.tab-stars,
+.category-star.filled,
+.business-level-stars,
+.unlock-stars,
+.victory-code {
+  color: #f59e0b;
+  text-shadow: none;
+}
+
+.status-pill,
+.status-pill.manual {
+  border-color: var(--line);
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.status-pill.auto,
+.business-open-action.ad,
+.catalog-option.required,
+.optimization-impact {
+  border-color: #93c5fd;
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.optimization-impact strong {
+  color: #1e3a8a;
+}
+
+.optimization-impact span {
+  color: #334155 !important;
+}
+
+.prestige-detail-block .detail-block-head strong {
+  color: #7c2d12;
+}
+
+.prestige-detail-block .detail-block-head em {
+  color: #92400e !important;
+}
+
+.business-optimization,
+.business-optimization.complete {
+  border-color: #f3c76a;
+  background: linear-gradient(180deg, #fffbeb, #fff7ed);
+  box-shadow: inset 0 0 0 1px rgba(245, 158, 11, 0.12), 0 10px 22px rgba(146, 64, 14, 0.08);
+}
+
+.prestige-emblem {
+  border-color: #f59e0b;
+  color: #ffffff;
+  background: radial-gradient(circle at 35% 25%, #facc15, #d97706 72%);
+  box-shadow: 0 8px 18px rgba(245, 158, 11, 0.22);
+}
+
+.prestige-summary-main span,
+.prestige-summary-main p,
+.prestige-economy-card span,
+.prestige-economy-card small,
+.business-optimization .optimization-impact span {
+  color: #92400e !important;
+}
+
+.prestige-summary-main strong,
+.business-optimization .optimization-impact strong {
+  color: #7c2d12;
+}
+
+.prestige-level-pill {
+  border-color: #f3c76a;
+  color: #7c2d12;
+  background: #fef3c7;
+}
+
+.prestige-step {
+  border-color: #f8ddb0;
+  color: #92400e;
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.prestige-step span {
+  color: #ffffff;
+  background: #d97706;
+}
+
+.prestige-step small {
+  color: #92400e;
+}
+
+.prestige-step.done {
+  border-color: #86efac;
+  background: #f0fdf4;
+}
+
+.prestige-step.done span {
+  color: #052e16;
+  background: #86efac;
+}
+
+.prestige-step.active {
+  border-color: #f59e0b;
+  background: #fff7ed;
+  box-shadow: inset 0 0 0 1px rgba(245, 158, 11, 0.18);
+}
+
+.prestige-progress {
+  border-color: #f3c76a;
+  background: #fdecc8;
+}
+
+.prestige-economy-card,
+.business-optimization .optimization-impact {
+  border-color: #f3c76a;
+  background: rgba(255, 255, 255, 0.72);
+  color: #7c2d12;
+}
+
+.prestige-economy-card.highlighted {
+  border-color: #86efac;
+  background: #f0fdf4;
+}
+
+.prestige-economy-card strong {
+  color: #7c2d12;
+}
+
+.prestige-economy-card.highlighted strong,
+.prestige-economy-card.highlighted small {
+  color: #15803d !important;
+}
+
+.prestige-economy-arrow {
+  color: #d97706;
+}
+
+.prestige-buy {
+  color: #422006;
+  background: linear-gradient(135deg, #facc15, #f59e0b);
+}
+
+.prestige-ad {
+  color: #7c2d12;
+  border: 1px solid #f3c76a;
+  background: #fff7ed;
+  box-shadow: none;
+}
+
+.reward-history {
+  border-color: #f3c76a;
+  background: #fffbeb;
+}
+
+.reward-history span {
+  color: #92400e;
+}
+
+.reward-history p {
+  color: #334155;
+}
+
+.status-pill.ready {
+  border-color: #86efac;
+  background: #f0fdf4;
+  color: #15803d;
+}
+
+.premium-slot,
+.premium-manager-card {
+  border-color: #fbbf24;
+  background: linear-gradient(135deg, #fff7ed, #eff6ff);
+}
+
+.primary-button,
+.invest-button,
+.requirement-action {
+  color: #ffffff;
+  box-shadow: 0 8px 18px rgba(37, 99, 235, 0.18);
+}
+
+.primary-button.buy {
+  background: linear-gradient(135deg, #22c55e, #15803d);
+}
+
+.primary-button.ad {
+  background: linear-gradient(135deg, #fb923c, #ea580c);
+}
+
+.primary-button.danger,
+.icon-danger {
+  background: var(--red-soft);
+  color: var(--red);
+}
+
+.primary-button.danger {
+  color: #ffffff;
+  background: linear-gradient(135deg, #ef4444, #b91c1c);
+}
+
+.primary-button.expand,
+.invest-button,
+.requirement-action {
+  background: linear-gradient(135deg, #0ea5e9, #2563eb);
+}
+
+.primary-button.prestige-buy {
+  color: #422006;
+  background: linear-gradient(135deg, #facc15, #f59e0b);
+}
+
+.primary-button.prestige-ad {
+  color: #7c2d12;
+  border: 1px solid #f3c76a;
+  background: #fff7ed;
+  box-shadow: none;
+}
+
+.primary-button.muted,
+.icon-quiet {
+  background: #e2e8f0;
+  color: var(--text);
+}
+
+.modal-overlay {
+  background: rgba(15, 23, 42, 0.34);
+  backdrop-filter: blur(6px);
+}
+
+.modal-box,
+.ad-box {
+  background: #ffffff;
+}
+
+.holding-merge-overlay {
+  background: rgba(15, 23, 42, 0.38);
+  backdrop-filter: blur(7px);
+}
+
+.holding-merge-box {
+  border-color: #f3c76a;
+  background: linear-gradient(180deg, #ffffff, #fffbeb);
+  box-shadow: 0 24px 64px rgba(146, 64, 14, 0.18);
+}
+
+.holding-merge-kicker {
+  color: #d97706;
+}
+
+.holding-merge-box h2 {
+  color: var(--text);
+}
+
+.holding-merge-stage {
+  border-color: #f3c76a;
+  background: radial-gradient(circle at center, rgba(250, 204, 21, 0.22), #ffffff 68%);
+}
+
+.holding-merge-core {
+  border-color: #f59e0b;
+  color: #92400e;
+  background: linear-gradient(135deg, #fff7ed, #dbeafe);
+  box-shadow: 0 0 28px rgba(245, 158, 11, 0.24);
+}
+
+.holding-merge-business {
+  border-color: #d7dee9;
+  background: rgba(255, 255, 255, 0.94);
+  color: var(--text);
+  box-shadow: 0 8px 18px rgba(30, 41, 59, 0.12);
+}
+
+.holding-merge-business span {
+  background: #eff6ff;
+}
+
+.holding-profit-card,
+.holding-profit-gain {
+  border-color: var(--line);
+  background: #ffffff;
+}
+
+.holding-profit-card.after {
+  border-color: #86efac;
+  background: #f0fdf4;
+}
+
+.holding-profit-card span,
+.holding-profit-gain span {
+  color: var(--muted);
+}
+
+.holding-profit-card strong {
+  color: var(--text);
+}
+
+.holding-profit-card.after strong,
+.holding-profit-gain strong {
+  color: #15803d;
+}
+
+.holding-profit-gain small {
+  color: #15803d;
+  background: #dcfce7;
+}
+
+.ad-countdown {
+  color: var(--blue);
+}
+
+.ad-hint-progress span {
+  background: #dbe4ef;
+}
+
+.ad-hint-progress span.active {
+  background: #f59e0b;
+}
+
+.ad-quiz-option {
+  border-color: var(--line);
+  background: #f8fafc;
+  color: var(--text);
+}
+
+.ad-result.wrong {
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+.ad-result span {
+  color: var(--text);
+}
+
+.vehicle-hero {
+  border: 0;
+  background: transparent;
+}
+
+.vehicle-hero::before,
+.vehicle-hero::after {
+  display: none;
+}
+
+.vehicle-hero-glow {
+  display: none;
+}
+
+.vehicle-hero-visual {
+  filter: drop-shadow(0 22px 24px rgba(30, 41, 59, 0.24));
+}
+
+.vehicle-cabin {
+  border-color: rgba(15, 23, 42, 0.12);
+  background: linear-gradient(135deg, rgba(125, 211, 252, 0.55), rgba(219, 234, 254, 0.9));
+}
+
+.vehicle-body {
+  border-color: rgba(15, 23, 42, 0.12);
+  box-shadow: inset 0 -14px 20px rgba(15, 23, 42, 0.16);
+}
+
+.vehicle-wheel {
+  border-color: #1f2937;
+  background: radial-gradient(circle, #f8fafc 0 20%, #94a3b8 21% 45%, #111827 46%);
+}
+
+.vehicle-hero-mark,
+.vehicle-hero-state {
+  border-color: var(--line);
+  background: rgba(255, 255, 255, 0.88);
+  color: var(--text);
+}
+
+.business-facts span,
+.back-button {
+  color: #1d4ed8;
+}
+
+.detail-block,
+.business-manager-row {
+  border-color: var(--line);
+}
+
+.upgrade-preview {
+  border-color: #93c5fd;
+  background: #eff6ff;
+}
+
+.upgrade-preview-main,
+.upgrade-preview-main span,
+.catalog-option.required {
+  color: #1d4ed8;
+}
+
+.business-level-stars.compact.condition-broken {
+  border-color: #fed7aa;
+  background: #fff7ed;
+}
+
+.business-level-stars.compact.condition-assembled {
+  border-color: #bae6fd;
+  background: #f0f9ff;
+}
+
+.business-level-stars.compact.condition-enhanced {
+  border-color: #bbf7d0;
+  background: #f0fdf4;
+}
+
+.business-level-stars.condition-broken {
+  color: #ea580c;
+}
+
+.business-level-stars.condition-assembled {
+  color: #0284c7;
+}
+
+.business-level-stars.condition-enhanced {
+  color: #16a34a;
+}
+
+.requirement-row.done .requirement-state {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.equipment-option:disabled,
+.catalog-option:disabled:not(.required),
+button:disabled {
+  opacity: 0.52;
+}
+
+.reward-burst-icon {
+  color: #ffffff;
+  background: radial-gradient(circle at 35% 30%, #f59e0b, #2563eb 72%);
+}
+
+.income-burst,
+.manager-efficiency.good,
+.text-emerald-300 {
+  color: var(--green) !important;
+  text-shadow: none;
+}
+
+.income-burst.auto,
+.manager-efficiency,
+.text-sky-300,
+.text-blue-300 {
+  color: var(--blue) !important;
+  text-shadow: none;
+}
+
+.manager-efficiency.bad,
+.text-red-300 {
+  color: var(--red) !important;
+}

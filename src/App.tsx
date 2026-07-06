@@ -2,11 +2,12 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { BusinessList } from "./components/BusinessList";
 import { GoalBar, TopBar, type MainGoal } from "./components/Bars";
 import { DetailPanel } from "./components/DetailPanel";
+import { HoldingMergeOverlay, type HoldingMergeAnimation } from "./components/HoldingMergeOverlay";
+import { MergerPanel } from "./components/MergerPanel";
 import { AdModal, LevelUnlockModal, ManagerModal, OfflineIncomeModal, VictoryModal } from "./components/Modals";
-import { Managers } from "./components/Managers";
 import { Tabs } from "./components/Tabs";
-import { AD_DURATION_SECONDS, AD_MOVIE_QUIZZES, AD_QUIZ_BONUS, CATEGORIES, CATEGORY_UNLOCK_GOALS, COLLECT_TIME, GEM_AD_REWARD, MANAGER_COOLDOWN_SECONDS, OPTIMIZATION_COSTS, PREMIUM_MANAGER_COST } from "./data";
-import { completeExpansion, createBusinesses, createManager, createPremiumManager, effectiveIncome, expansionDurationSeconds, expansionProgress, nextBusinessOpenCost, nextOptimizationCost, tickBusinesses, unlockDelaySeconds } from "./game";
+import { AD_DURATION_SECONDS, AD_MOVIE_QUIZZES, AD_QUIZ_BONUS, CATEGORIES, CATEGORY_UNLOCK_GOALS, COLLECT_TIME, GEM_AD_REWARD, MANAGER_COOLDOWN_SECONDS, MAX_BUSINESS_TIER, OPTIMIZATION_COSTS, PREMIUM_MANAGER_COST } from "./data";
+import { categoryMergerStatus, completeExpansion, createBusinesses, createManager, createPremiumManager, effectiveIncome, expansionDurationSeconds, expansionProgress, nextBusinessOpenCost, nextOptimizationCost, tickBusinesses, totalAutoIncomePerSecond, unlockDelaySeconds } from "./game";
 import { advanceOffline, clearProgress, loadProgress, saveProgress, type GameSnapshot } from "./save";
 import type { ActiveAd, Business, ExpansionReward, Manager, OfflineIncome } from "./types";
 
@@ -17,6 +18,65 @@ interface IncomeBurst {
   mode: "manual" | "auto";
 }
 
+const MONEY_CHEAT_CODE = "PPGWJHT";
+const GEM_CHEAT_CODE = "GREEDISGOOD";
+const HOLDING_CHEAT_CODE = "HOLDING";
+const GEM_CHEAT_REWARD = 50;
+const CHEAT_BUFFER_LENGTH = Math.max(MONEY_CHEAT_CODE.length, GEM_CHEAT_CODE.length, HOLDING_CHEAT_CODE.length);
+const CHEAT_TIME_MULTIPLIER = 10;
+const CHEAT_DURATION_SECONDS = 60;
+
+function getCheatKey(event: KeyboardEvent): string | null {
+  const key = event.key.toUpperCase();
+  if (/^[A-Z]$/.test(key)) return key;
+
+  const codeMatch = /^Key([A-Z])$/.exec(event.code);
+  return codeMatch?.[1] ?? null;
+}
+
+function mergeBusinessesIntoHolding(businesses: Business[], categoryIndex: number): Business[] {
+  return businesses.map((item) => (
+    item.catIdx === categoryIndex
+      ? {
+        ...item,
+        mergedIntoHolding: true,
+        collectTimer: 0,
+        collectReady: false,
+        expansionRemaining: 0,
+        expansionDuration: 0,
+      }
+      : item
+  ));
+}
+
+function nextHoldingCheatCategory(businesses: Business[]): number | null {
+  for (let index = 0; index < CATEGORIES.length; index += 1) {
+    const status = categoryMergerStatus(businesses, index);
+    if (status.total > 0 && !status.merged) return index;
+  }
+  return null;
+}
+
+function prepareCategoryForMerger(businesses: Business[], categoryIndex: number): Business[] {
+  return businesses.map((item) => (
+    item.catIdx === categoryIndex
+      ? {
+        ...item,
+        opened: true,
+        unlockRemaining: 0,
+        tier: MAX_BUSINESS_TIER,
+        maxed: true,
+        optimizationLevel: OPTIMIZATION_COSTS.length,
+        collectTimer: 0,
+        collectReady: false,
+        expansionRemaining: 0,
+        expansionDuration: 0,
+        pendingExpansionReward: null,
+      }
+      : item
+  ));
+}
+
 export function App() {
   const initialProgress = useMemo(() => loadProgress(), []);
   const [soft, setSoft] = useState(initialProgress.snapshot.soft);
@@ -25,6 +85,7 @@ export function App() {
   const [activeCategory, setActiveCategory] = useState(initialProgress.snapshot.activeCategory);
   const [unlockedCategory, setUnlockedCategory] = useState(initialProgress.snapshot.unlockedCategory);
   const [unlockingCategory, setUnlockingCategory] = useState<number | null>(null);
+  const [levelUnlockCategory, setLevelUnlockCategory] = useState<number | null>(null);
   const [selectedId, setSelectedId] = useState<number | null>(initialProgress.snapshot.selectedId);
   const [businessPageOpen, setBusinessPageOpen] = useState(initialProgress.snapshot.businessPageOpen);
   const [managers, setManagers] = useState<Array<Manager | null>>(initialProgress.snapshot.managers);
@@ -36,11 +97,15 @@ export function App() {
   const [victoryOpen, setVictoryOpen] = useState(false);
   const [offlineIncome, setOfflineIncome] = useState<OfflineIncome | null>(initialProgress.offline);
   const [incomeBursts, setIncomeBursts] = useState<IncomeBurst[]>([]);
+  const [timeWarpRemaining, setTimeWarpRemaining] = useState(0);
+  const [holdingMergeAnimation, setHoldingMergeAnimation] = useState<HoldingMergeAnimation | null>(null);
   const burstId = useRef(0);
   const autoEffectClock = useRef(0);
   const adTimer = useRef<number | null>(null);
   const adReward = useRef<(() => void) | null>(null);
   const unlockTimer = useRef<number | null>(null);
+  const cheatBuffer = useRef("");
+  const timeWarpRemainingRef = useRef(0);
   const lastTickAt = useRef(performance.now());
   const pausedRef = useRef(false);
   const pausedAt = useRef<number | null>(null);
@@ -48,10 +113,7 @@ export function App() {
   const claimedExpansionRewards = useRef(new Set<string>());
 
   const selectedBusiness = businesses.find((item) => item.id === selectedId) ?? null;
-  const totalAuto = useMemo(
-    () => businesses.reduce((sum, item) => sum + (item.manager ? effectiveIncome(item) : 0), 0),
-    [businesses],
-  );
+  const totalAuto = useMemo(() => totalAutoIncomePerSecond(businesses), [businesses]);
   const premiumPreview = useMemo(() => createPremiumManager(managerSeed), [managerSeed]);
   const finalGoalProgress = useMemo(() => finalQuestProgress(businesses), [businesses]);
   const currentGoal = useMemo<MainGoal | null>(() => {
@@ -65,9 +127,18 @@ export function App() {
   useEffect(() => {
     const timer = window.setInterval(() => {
       const now = performance.now();
-      const dt = (now - lastTickAt.current) / 1000;
+      const realDt = (now - lastTickAt.current) / 1000;
       lastTickAt.current = now;
       if (pausedRef.current) return;
+      let dt = realDt;
+      const remainingBoost = timeWarpRemainingRef.current;
+      if (remainingBoost > 0) {
+        const boostedSeconds = Math.min(realDt, remainingBoost);
+        dt = realDt + boostedSeconds * (CHEAT_TIME_MULTIPLIER - 1);
+        const nextRemaining = Math.max(0, remainingBoost - realDt);
+        timeWarpRemainingRef.current = nextRemaining;
+        setTimeWarpRemaining(nextRemaining);
+      }
       setBusinesses((current) => {
         const result = tickBusinesses(current, dt);
         if (result.income > 0) setSoft((value) => value + result.income);
@@ -76,7 +147,7 @@ export function App() {
         if (autoEffectClock.current >= 1) {
           autoEffectClock.current = 0;
           result.businesses.forEach((business) => {
-            if (business.manager) addIncomeBurst(business.id, effectiveIncome(business), "auto");
+            if (business.manager && !business.mergedIntoHolding) addIncomeBurst(business.id, effectiveIncome(business), "auto");
           });
         }
         return result.businesses;
@@ -84,6 +155,32 @@ export function App() {
       setManagerCooldown((value) => Math.max(0, value - dt));
     }, 250);
     return () => window.clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
+    const handleCheatInput = (event: KeyboardEvent) => {
+      if (event.altKey || event.ctrlKey || event.metaKey) return;
+      const key = getCheatKey(event);
+      if (!key) return;
+      cheatBuffer.current = `${cheatBuffer.current}${key}`.slice(-CHEAT_BUFFER_LENGTH);
+      if (cheatBuffer.current.endsWith(GEM_CHEAT_CODE)) {
+        cheatBuffer.current = "";
+        setHard((value) => value + GEM_CHEAT_REWARD);
+        return;
+      }
+      if (cheatBuffer.current.endsWith(HOLDING_CHEAT_CODE)) {
+        cheatBuffer.current = "";
+        prepareNextHoldingForMerge();
+        return;
+      }
+      if (cheatBuffer.current.endsWith(MONEY_CHEAT_CODE)) {
+        cheatBuffer.current = "";
+        timeWarpRemainingRef.current = CHEAT_DURATION_SECONDS;
+        setTimeWarpRemaining(CHEAT_DURATION_SECONDS);
+      }
+    };
+    window.addEventListener("keydown", handleCheatInput);
+    return () => window.removeEventListener("keydown", handleCheatInput);
   }, []);
 
   useEffect(() => {
@@ -204,6 +301,8 @@ export function App() {
     lastTickAt.current = performance.now();
     burstId.current = 0;
     autoEffectClock.current = 0;
+    cheatBuffer.current = "";
+    timeWarpRemainingRef.current = 0;
     claimedExpansionRewards.current.clear();
     setSoft(100);
     setHard(0);
@@ -211,6 +310,7 @@ export function App() {
     setActiveCategory(0);
     setUnlockedCategory(0);
     setUnlockingCategory(null);
+    setLevelUnlockCategory(null);
     setSelectedId(0);
     setBusinessPageOpen(false);
     setManagers([createManager(0), createManager(1), createManager(2)]);
@@ -219,6 +319,8 @@ export function App() {
     setAssignBusinessId(null);
     setActiveAd(null);
     setOfflineIncome(null);
+    setHoldingMergeAnimation(null);
+    setTimeWarpRemaining(0);
     setVictoryShown(false);
     setVictoryOpen(false);
     setIncomeBursts([]);
@@ -266,6 +368,7 @@ export function App() {
     const firstBusinessId = businesses.find((item) => item.catIdx === targetCategory)?.id ?? null;
     setSoft((value) => value - currentGoal.cost);
     setUnlockingCategory(targetCategory);
+    setLevelUnlockCategory(targetCategory);
     if (unlockTimer.current != null) window.clearTimeout(unlockTimer.current);
     unlockTimer.current = window.setTimeout(() => {
       setBusinesses((current) => current.map((item) => (
@@ -293,7 +396,7 @@ export function App() {
 
   function handleCollect(id: number) {
     const business = businesses.find((item) => item.id === id);
-    if (!business?.opened || !business.collectReady || business.manager) return;
+    if (!business?.opened || business.mergedIntoHolding || !business.collectReady || business.manager) return;
     const amount = effectiveIncome(business) * COLLECT_TIME;
     setSoft((value) => value + amount);
     addIncomeBurst(id, amount, "manual");
@@ -424,11 +527,47 @@ export function App() {
     runAd(() => updateBusiness(id, (item) => ({ ...item, unlockRemaining: 0 })));
   }
 
+  function prepareNextHoldingForMerge() {
+    const categoryIndex = nextHoldingCheatCategory(snapshotRef.current.businesses);
+    if (categoryIndex == null) return;
+    if (unlockTimer.current != null) {
+      window.clearTimeout(unlockTimer.current);
+      unlockTimer.current = null;
+    }
+    const firstBusinessId = snapshotRef.current.businesses.find((business) => business.catIdx === categoryIndex)?.id ?? null;
+    setBusinesses((current) => prepareCategoryForMerger(current, categoryIndex));
+    setUnlockedCategory((value) => Math.max(value, categoryIndex));
+    setActiveCategory(categoryIndex);
+    setSelectedId(firstBusinessId);
+    setBusinessPageOpen(false);
+    setUnlockingCategory(null);
+    setLevelUnlockCategory(null);
+  }
+
+  function handleMergeCategory(categoryIndex: number) {
+    const status = categoryMergerStatus(businesses, categoryIndex);
+    if (!status.ready || status.merged) return;
+    const mergedBusinesses = mergeBusinessesIntoHolding(businesses, categoryIndex);
+    setHoldingMergeAnimation({
+      categoryName: CATEGORIES[categoryIndex]?.name ?? "Группа",
+      beforeIncome: totalAutoIncomePerSecond(businesses),
+      afterIncome: totalAutoIncomePerSecond(mergedBusinesses),
+      businesses: businesses
+        .filter((business) => business.catIdx === categoryIndex)
+        .map((business) => ({ id: business.id, name: business.name, icon: business.icon })),
+    });
+    setBusinesses((current) => {
+      const currentStatus = categoryMergerStatus(current, categoryIndex);
+      if (!currentStatus.ready || currentStatus.merged) return current;
+      return mergeBusinessesIntoHolding(current, categoryIndex);
+    });
+  }
+
   const screenKey = businessPageOpen ? `detail-${selectedId ?? "none"}` : `main-${activeCategory}`;
 
   return (
     <main className="app-shell">
-      <TopBar soft={soft} hard={hard} totalAuto={totalAuto} onGemAd={handleGemAd} onReset={handleFullReset} />
+      <TopBar soft={soft} hard={hard} totalAuto={totalAuto} timeWarpRemaining={timeWarpRemaining} onGemAd={handleGemAd} onReset={handleFullReset} />
       {!businessPageOpen && <GoalBar soft={soft} goal={currentGoal} opening={unlockingCategory != null} onClaim={handleClaimGoal} />}
       <div className="content-scroll">
         <div className={`screen-transition ${businessPageOpen ? "detail-screen-transition" : "main-screen-transition"}`} key={screenKey}>
@@ -436,7 +575,7 @@ export function App() {
             <DetailPanel business={selectedBusiness} soft={soft} hard={hard} onBack={() => setBusinessPageOpen(false)} onBuyEquipment={handleBuyEquipment} onStartAction={handleStartAction} onExpand={handleExpand} onSkipExpansion={handleSkipExpansion} onClaimExpansionReward={handleClaimExpansionReward} onOptimize={handleOptimizeBusiness} onOptimizeAd={handleOptimizeBusinessAd} onOpenAssign={setAssignBusinessId} onRemoveManager={(id) => updateBusiness(id, (item) => ({ ...item, manager: null }))} />
           ) : (
             <div className="main-sections">
-              <Managers managers={managers} premiumManager={premiumPreview} managerCooldown={managerCooldown} onSearch={handleSearchManager} onFire={(slot) => setManagers((current) => current.map((item, idx) => (idx === slot ? null : item)))} />
+              <MergerPanel businesses={businesses} activeCategory={activeCategory} onMerge={handleMergeCategory} />
               <BusinessList
                 businesses={businesses}
                 activeCategory={activeCategory}
@@ -460,8 +599,9 @@ export function App() {
       <ManagerModal business={businesses.find((item) => item.id === assignBusinessId) ?? null} managers={managers} premiumManager={premiumPreview} hard={hard} managerCooldown={managerCooldown} open={assignBusinessId != null} onSearch={handleSearchManager} onPremiumHire={handleHirePremiumManager} onAssign={handleAssign} onFire={(slot) => setManagers((current) => current.map((item, idx) => (idx === slot ? null : item)))} onClose={() => setAssignBusinessId(null)} />
       <OfflineIncomeModal reward={offlineIncome} onClose={() => setOfflineIncome(null)} onDouble={handleDoubleOfflineIncome} />
       <AdModal ad={activeAd} onAnswer={handleAdAnswer} onCloseResult={handleCloseAdResult} />
-      <LevelUnlockModal name={unlockingCategory == null ? null : CATEGORIES[unlockingCategory]?.name ?? null} />
+      <LevelUnlockModal name={levelUnlockCategory == null ? null : CATEGORIES[levelUnlockCategory]?.name ?? null} onClose={() => setLevelUnlockCategory(null)} />
       <VictoryModal open={victoryOpen} onClose={() => setVictoryOpen(false)} />
+      <HoldingMergeOverlay merge={holdingMergeAnimation} onClose={() => setHoldingMergeAnimation(null)} />
     </main>
   );
 }
@@ -470,7 +610,7 @@ function finalQuestProgress(businesses: Business[]) {
   const maxOptimization = OPTIMIZATION_COSTS.length;
   const done = businesses.reduce((sum, business) => (
     sum
-    + (business.opened && business.tier >= 4 ? 1 : 0)
+    + (business.opened && business.tier >= MAX_BUSINESS_TIER ? 1 : 0)
     + (business.opened && business.optimizationLevel >= maxOptimization ? 1 : 0)
   ), 0);
   const total = businesses.length * 2;

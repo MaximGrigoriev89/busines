@@ -10,7 +10,8 @@ export const PREMIUM_MANAGER_COST = 7;
 export const MANAGER_COOLDOWN_SECONDS = 20 * 60;
 export const OPTIMIZATION_COSTS = [1, 2, 4, 8, 12];
 export const OPTIMIZATION_BONUSES = [0.05, 0.08, 0.12, 0.17, 0.23];
-export const TIER_INCOME_MULTIPLIERS = [1, 2.7, 6.2, 12.5];
+export const TIER_INCOME_MULTIPLIERS = [1, 2.7, 6.2];
+export const MAX_BUSINESS_TIER = 3;
 
 export const EXPANSION_BALANCE = [
   { workSeconds: 75, costMultiplier: 0.38, timeMultiplier: 0.7 },
@@ -279,23 +280,23 @@ export const FACES = [
 ];
 
 export const CATEGORIES: CategorySeed[] = [
-  { name: "Уровень 1", icon: "★", biz: [
+  { name: "Точки", icon: "★", biz: [
     { n: "Кофейная точка", ic: "☕", base: 1.2, salary: 0.18 }, { n: "Мини-пекарня", ic: "🥐", base: 1.5, salary: 0.22 },
     { n: "Ремонт обуви", ic: "🧰", base: 1.8, salary: 0.27 }, { n: "Автомойка", ic: "🚿", base: 2, salary: 0.32 },
   ] },
-  { name: "Уровень 2", icon: "★★", biz: [
+  { name: "Сервисы", icon: "★★", biz: [
     { n: "Кафе", ic: "🍽️", base: 3.4, salary: 0.55 }, { n: "Барбершоп", ic: "✂️", base: 3.8, salary: 0.62 },
     { n: "Сервис техники", ic: "🔧", base: 4.2, salary: 0.7 }, { n: "Такси-парк", ic: "🚕", base: 4.8, salary: 0.82 },
   ] },
-  { name: "Уровень 3", icon: "★★★", biz: [
+  { name: "Заведения", icon: "★★★", biz: [
     { n: "Ресторан", ic: "🍝", base: 7, salary: 1.25 }, { n: "Фитнес-клуб", ic: "🏋️", base: 8, salary: 1.45 },
     { n: "Веб-агентство", ic: "🌐", base: 9, salary: 1.65 }, { n: "Кинотеатр", ic: "🎬", base: 10, salary: 1.9 },
   ] },
-  { name: "Уровень 4", icon: "★★★★", biz: [
+  { name: "Комплексы", icon: "★★★★", biz: [
     { n: "IT-студия", ic: "🖥️", base: 15, salary: 3.2 }, { n: "Логистика", ic: "🚛", base: 17, salary: 3.8 },
     { n: "Спа-комплекс", ic: "🧖", base: 19, salary: 4.4 }, { n: "Геймдев", ic: "🎮", base: 22, salary: 5.2 },
   ] },
-  { name: "Уровень 5", icon: "★★★★★", biz: [
+  { name: "Кластеры", icon: "★★★★★", biz: [
     { n: "Сеть ресторанов", ic: "🏙️", base: 32, salary: 8 }, { n: "Дата-центр", ic: "🗄️", base: 36, salary: 9.5 },
     { n: "Медиа-холдинг", ic: "📡", base: 40, salary: 11 }, { n: "Промышленный парк", ic: "🏭", base: 45, salary: 12.5 },
   ] },

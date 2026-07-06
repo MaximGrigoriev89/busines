@@ -1,25 +1,27 @@
 import { Gem, Goal, RotateCcw, Tv } from "lucide-react";
-import { GEM_AD_REWARD } from "../data";
+import { CATEGORIES, GEM_AD_REWARD } from "../data";
 import { formatMoney } from "../game";
 
 interface TopBarProps {
   soft: number;
   hard: number;
   totalAuto: number;
+  timeWarpRemaining: number;
   onGemAd: () => void;
   onReset: () => void;
 }
 
-export function TopBar({ soft, hard, totalAuto, onGemAd, onReset }: TopBarProps) {
+export function TopBar({ soft, hard, totalAuto, timeWarpRemaining, onGemAd, onReset }: TopBarProps) {
   return (
     <header className="top-bar">
       <div className="money-pill">
         <span className="coin">$</span>
         <span>{formatMoney(soft)}</span>
       </div>
-      <div className="income-pill">
+      <div className={`income-pill ${timeWarpRemaining > 0 ? "boosted" : ""}`}>
         <span>Доход</span>
         <strong>+${formatMoney(totalAuto)}/сек</strong>
+        {timeWarpRemaining > 0 && <em>x10 · {formatBoostTimer(timeWarpRemaining)}</em>}
       </div>
       <div className="top-actions">
         <div className="money-pill gem-pill">
@@ -36,6 +38,13 @@ export function TopBar({ soft, hard, totalAuto, onGemAd, onReset }: TopBarProps)
       </div>
     </header>
   );
+}
+
+function formatBoostTimer(seconds: number): string {
+  const total = Math.max(0, Math.ceil(seconds));
+  const minutes = Math.floor(total / 60);
+  const rest = String(total % 60).padStart(2, "0");
+  return `${minutes}:${rest}`;
 }
 
 interface GoalBarProps {
@@ -82,12 +91,13 @@ export function GoalBar({ soft, goal, opening, onClaim }: GoalBarProps) {
   const progress = Math.min(100, (soft / goal.cost) * 100);
   const ready = soft >= goal.cost && !opening;
   const showClaim = ready || opening;
+  const categoryName = CATEGORIES[goal.targetCategory]?.name ?? "новую категорию";
   return (
     <section className="goal-panel">
       <div className="goal-row">
         <div className="section-title">
           <Goal size={17} />
-          Накопи ${formatMoney(goal.cost)}
+          Арендовать землю под {categoryName}
         </div>
         {showClaim && (
           <button className={`goal-claim ${ready ? "ready" : ""}`} disabled={!ready} onClick={onClaim}>

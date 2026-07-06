@@ -1,5 +1,7 @@
-import { CATEGORIES, COLLECT_TIME, EQUIPMENT_OPTIONS, EXPANSION_BALANCE, FACES, LONG_ACTION_OPTIONS, MANAGER_RARITY_STATS, OPTIMIZATION_BONUSES, OPTIMIZATION_COSTS, RARITIES, TIER_INCOME_MULTIPLIERS } from "./data";
+import { CATEGORIES, COLLECT_TIME, EQUIPMENT_OPTIONS, EXPANSION_BALANCE, FACES, LONG_ACTION_OPTIONS, MANAGER_RARITY_STATS, MAX_BUSINESS_TIER, OPTIMIZATION_BONUSES, OPTIMIZATION_COSTS, RARITIES, TIER_INCOME_MULTIPLIERS } from "./data";
 import type { Business, ExpansionRequirement, Manager } from "./types";
+
+export const HOLDING_GLOBAL_INCOME_BONUS = 3;
 
 export function createBusinesses(): Business[] {
   let id = 0;
@@ -27,6 +29,7 @@ export function createBusinesses(): Business[] {
       optimizationLevel: 0,
       pendingExpansionReward: null,
       maxed: false,
+      mergedIntoHolding: false,
       };
     }),
   );
@@ -73,7 +76,7 @@ export function baseIncome(business: Business): number {
 }
 
 export function effectiveIncome(business: Business): number {
-  if (!business.opened) return 0;
+  if (!business.opened || business.mergedIntoHolding) return 0;
   const gross = baseIncome(business);
   if (!business.manager) return gross;
   return Math.max(0, gross * business.manager.efficiency - managerSalary(business, business.manager));
@@ -84,7 +87,7 @@ export function managerSalary(business: Business, manager: Manager): number {
 }
 
 export function tickBusinesses(businesses: Business[], dt: number): { businesses: Business[]; income: number; gems: number } {
-  let income = 0;
+  let activeBusinessIncome = 0;
   const next = businesses.map((business) => {
     const updated = { ...business };
     if (!updated.opened) {
@@ -93,8 +96,17 @@ export function tickBusinesses(businesses: Business[], dt: number): { businesses
       }
       return updated;
     }
+    if (updated.mergedIntoHolding) {
+      return {
+        ...updated,
+        collectTimer: 0,
+        collectReady: false,
+        expansionRemaining: 0,
+        expansionDuration: 0,
+      };
+    }
     if (!updated.maxed && updated.expansionRemaining <= 0) updated.workedSeconds += dt;
-    if (updated.manager) income += effectiveIncome(updated) * dt;
+    if (updated.manager) activeBusinessIncome += effectiveIncome(updated);
     else if (!updated.collectReady) {
       updated.collectTimer = Math.min(COLLECT_TIME, updated.collectTimer + dt);
       updated.collectReady = updated.collectTimer >= COLLECT_TIME;
@@ -111,12 +123,76 @@ export function tickBusinesses(businesses: Business[], dt: number): { businesses
     updated.requirements = updated.requirements.map((req) => tickRequirement(req, dt));
     return updated;
   });
+  const income = (activeBusinessIncome + totalHoldingIncomePerSecond(next)) * globalIncomeMultiplier(next) * dt;
   return { businesses: next, income, gems: 0 };
 }
 
+export function isBusinessReadyForMerger(business: Business): boolean {
+  return business.opened && business.maxed && business.optimizationLevel >= OPTIMIZATION_COSTS.length;
+}
+
+export function categoryMergerStatus(businesses: Business[], categoryIndex: number) {
+  const group = businesses.filter((business) => business.catIdx === categoryIndex);
+  const eligible = group.filter(isBusinessReadyForMerger).length;
+  const merged = group.length > 0 && group.every((business) => business.mergedIntoHolding);
+  const levelDone = group.reduce((sum, business) => sum + (business.opened ? Math.min(MAX_BUSINESS_TIER, business.tier) : 0), 0);
+  const levelTotal = group.length * MAX_BUSINESS_TIER;
+  const optimizationDone = group.reduce((sum, business) => sum + (business.opened ? business.optimizationLevel : 0), 0);
+  const optimizationTotal = group.length * OPTIMIZATION_COSTS.length;
+  const starsDone = levelDone + optimizationDone;
+  const starsTotal = levelTotal + optimizationTotal;
+  return {
+    total: group.length,
+    eligible,
+    ready: group.length > 0 && eligible === group.length,
+    merged,
+    levelDone,
+    levelTotal,
+    optimizationDone,
+    optimizationTotal,
+    starsDone,
+    starsTotal,
+    holdingIncome: merged ? holdingIncomeForCategory(group) : 0,
+  };
+}
+
+export function totalAutoIncomePerSecond(businesses: Business[]): number {
+  const activeBusinessIncome = businesses.reduce((sum, business) => (
+    sum + (business.opened && !business.mergedIntoHolding && business.manager ? effectiveIncome(business) : 0)
+  ), 0);
+  return (activeBusinessIncome + totalHoldingIncomePerSecond(businesses)) * globalIncomeMultiplier(businesses);
+}
+
+export function globalIncomeMultiplier(businesses: Business[]): number {
+  return 1 + mergedCategoryCount(businesses) * HOLDING_GLOBAL_INCOME_BONUS;
+}
+
+export function totalHoldingIncomePerSecond(businesses: Business[]): number {
+  return mergedCategoryIndexes(businesses).reduce((sum, categoryIndex) => {
+    const group = businesses.filter((business) => business.catIdx === categoryIndex);
+    return sum + holdingIncomeForCategory(group);
+  }, 0);
+}
+
+function mergedCategoryCount(businesses: Business[]): number {
+  return mergedCategoryIndexes(businesses).length;
+}
+
+function mergedCategoryIndexes(businesses: Business[]): number[] {
+  const categories = Array.from(new Set(businesses.map((business) => business.catIdx)));
+  return categories.filter((categoryIndex) => {
+    const group = businesses.filter((business) => business.catIdx === categoryIndex);
+    return group.length > 0 && group.every((business) => business.mergedIntoHolding);
+  });
+}
+
+function holdingIncomeForCategory(group: Business[]): number {
+  return group.reduce((sum, business) => sum + baseIncome(business), 0);
+}
+
 export function completeExpansion(business: Business): Business {
-  if (business.maxed || business.tier >= 4) {
-    return { ...business, expansionRemaining: 0, expansionDuration: 0 };
+  if (business.maxed || business.tier >= MAX_BUSINESS_TIER) {
+    return { ...business, expansionRemaining: 0, expansionDuration: 0, maxed: true };
   }
   const incomeBefore = effectiveIncome(business);
   const nextTier = business.tier + 1;
@@ -129,7 +205,7 @@ export function completeExpansion(business: Business): Business {
     expansionRemaining: 0,
     expansionDuration: 0,
     requirements: createExpansionRequirements(business.id, business.catIdx, nextTier, business.base),
-    maxed: nextTier >= 4,
+    maxed: nextTier >= MAX_BUSINESS_TIER,
   };
   return {
     ...updated,

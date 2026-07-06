@@ -1,6 +1,8 @@
-import { ArrowLeft, Check, Clock, Gem, Layers, PackageCheck, Rocket, Timer, TrendingUp, Tv, UserMinus, UserPlus, X } from "lucide-react";
+import { ArrowLeft, Check, Clock, Gem, Layers, PackageCheck, Rocket, Timer, TrendingUp, Trophy, Tv, UserMinus, UserPlus, X } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
-import { EQUIPMENT_OPTIONS, LONG_ACTION_OPTIONS, OPTIMIZATION_COSTS, RARITY_CLASS, RARITY_NAME } from "../data";
+import { businessArtForBusiness } from "../businessArt";
+import { businessTierVisualForTier } from "../businessTierVisual";
+import { EQUIPMENT_OPTIONS, LONG_ACTION_OPTIONS, MAX_BUSINESS_TIER, OPTIMIZATION_COSTS, RARITY_CLASS, RARITY_NAME } from "../data";
 import { effectiveIncome, expansionProgress, isRequirementDone, managerSalary, nextOptimizationBonus, nextOptimizationCost, optimizationBonus } from "../game";
 import type { Business, ExpansionRequirement, ExpansionReward } from "../types";
 import { BusinessLevelStars } from "./BusinessLevelStars";
@@ -22,6 +24,14 @@ interface DetailPanelProps {
   onBack: () => void;
 }
 
+const OPTIMIZATION_STEPS = [
+  { name: "Учет", description: "Навести порядок в ключевых цифрах бизнеса." },
+  { name: "Процессы", description: "Убрать лишние задержки и ручные операции." },
+  { name: "Команда", description: "Поднять качество смен и контроль сервиса." },
+  { name: "Маркетинг", description: "Усилить поток клиентов и повторные продажи." },
+  { name: "Сеть", description: "Собрать бизнес в устойчивую систему роста." },
+];
+
 export function DetailPanel(props: DetailPanelProps) {
   const { business, soft, hard, onBack, onBuyEquipment, onStartAction, onExpand, onSkipExpansion, onClaimExpansionReward, onOptimize, onOptimizeAd, onOpenAssign, onRemoveManager } = props;
   const [equipmentReqId, setEquipmentReqId] = useState<string | null>(null);
@@ -40,8 +50,9 @@ export function DetailPanel(props: DetailPanelProps) {
 
   const income = effectiveIncome(business);
   const progress = expansionProgress(business);
+  const expansionComplete = business.maxed || business.tier >= MAX_BUSINESS_TIER;
   const nextTierBusiness = { ...business, tier: business.tier + 1 };
-  const nextIncome = business.maxed ? income : effectiveIncome(nextTierBusiness);
+  const nextIncome = expansionComplete ? income : effectiveIncome(nextTierBusiness);
   const tierGain = Math.max(0, nextIncome - income);
   const equipmentMatch = business.requirements.find((req) => req.id === equipmentReqId);
   const equipmentReq = equipmentMatch?.type === "equipment" ? equipmentMatch : null;
@@ -53,17 +64,11 @@ export function DetailPanel(props: DetailPanelProps) {
         <div className="level-badge"><BusinessLevelStars level={business.tier} /></div>
       </div>
       <DetailBlock title="Бизнес" meta={`$${income.toFixed(2)}/сек`}>
-        <div className="business-summary">
-          <div className="business-summary-icon">{business.icon}</div>
-          <div className="min-w-0">
-            <h2>{business.name}</h2>
-            <div className="business-summary-text">{business.manager ? "Авто сбор" : "Ручной сбор"}</div>
-          </div>
-        </div>
+        <BusinessShowcase business={business} income={income} />
         <BusinessInfo business={business} onHire={() => onOpenAssign(business.id)} onInfo={() => setManagerInfoOpen(true)} />
       </DetailBlock>
-      <DetailBlock title="Расширение" meta={business.maxed ? "MAX" : `${progress.done}/${progress.total}`}>
-        {!business.maxed ? (
+      <DetailBlock title="Расширение" meta={expansionComplete ? "MAX" : `${progress.done}/${progress.total}`}>
+        {!expansionComplete ? (
           <>
           <div className="requirement-list">
             {business.requirements.map((req) => (
@@ -92,7 +97,7 @@ export function DetailPanel(props: DetailPanelProps) {
           <div className="expansion-complete">Бизнес полностью расширен.</div>
         )}
       </DetailBlock>
-      <DetailBlock title="Оптимизация дохода" meta={`${business.optimizationLevel}/${OPTIMIZATION_COSTS.length}`}>
+      <DetailBlock title="Оптимизация дохода" meta={`${business.optimizationLevel}/${OPTIMIZATION_COSTS.length}`} className="prestige-detail-block">
         <BusinessOptimization business={business} hard={hard} onOptimize={onOptimize} onOptimizeAd={onOptimizeAd} />
       </DetailBlock>
       {managerInfoOpen && business.manager && (
@@ -110,9 +115,30 @@ export function DetailPanel(props: DetailPanelProps) {
   );
 }
 
-function DetailBlock({ title, meta, children }: { title: string; meta: string; children: ReactNode }) {
+function BusinessShowcase({ business, income }: { business: Business; income: number }) {
+  const visual = businessTierVisualForTier(business.tier);
+  const art = businessArtForBusiness(business);
   return (
-    <section className="detail-block">
+    <div className={`vehicle-showcase condition-${visual.tone}`}>
+      <div className="vehicle-hero business-placeholder-hero">
+        <div className="vehicle-hero-glow" />
+        <img className="vehicle-stage-art business-placeholder-art" src={art} alt={`${business.name}: ${visual.label}`} />
+        <div className="vehicle-hero-mark">{business.icon}</div>
+        <div className="vehicle-hero-state">{visual.label}</div>
+      </div>
+      <div className="vehicle-showcase-copy">
+        <h2>{business.name}</h2>
+        <div className="business-summary-text">
+          {business.mergedIntoHolding ? "В составе холдинга" : business.manager ? "Авто сбор" : "Ручной сбор"} · доход ${income.toFixed(2)}/сек
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function DetailBlock({ title, meta, children, className = "" }: { title: string; meta: string; children: ReactNode; className?: string }) {
+  return (
+    <section className={`detail-block ${className}`.trim()}>
       <div className="detail-block-head">
         <div>
           <strong>{title}</strong>
@@ -202,7 +228,7 @@ function UpgradeAction({ business, progressReady, tierGain, onExpand, onSkipExpa
   const buttonText = active
     ? `Расширение ${formatSeconds(business.expansionRemaining)}`
     : progressReady
-      ? `Тир ${business.tier + 1}`
+      ? "Расширить"
       : "Выполните условия";
   return (
     <div className="upgrade-preview">
@@ -280,12 +306,15 @@ function RequirementRow({ done, icon, title, text, progress, action }: { done: b
 }
 
 function EquipmentPicker({ business, req, soft, onBuyEquipment, onClose }: { business: Business; req: Extract<ExpansionRequirement, { type: "equipment" }>; soft: number; onBuyEquipment: (id: number, requirementId: string, equipmentId: string) => void; onClose: () => void }) {
-  const required = EQUIPMENT_OPTIONS.find((item) => item.id === req.equipmentId);
-  const catalog = [
-    ...EQUIPMENT_OPTIONS.filter((item) => item.id === req.equipmentId),
-    ...EQUIPMENT_OPTIONS.filter((item) => item.id !== req.equipmentId),
-  ];
-  const done = req.owned >= req.quantity;
+  const equipmentRequirements = business.requirements
+    .filter((item): item is Extract<ExpansionRequirement, { type: "equipment" }> => item.type === "equipment")
+    .map((requirement) => ({
+      requirement,
+      item: EQUIPMENT_OPTIONS.find((option) => option.id === requirement.equipmentId),
+    }))
+    .filter((row): row is { requirement: Extract<ExpansionRequirement, { type: "equipment" }>; item: NonNullable<typeof row.item> } => Boolean(row.item))
+    .sort((left, right) => Number(right.requirement.id === req.id) - Number(left.requirement.id === req.id));
+  const required = equipmentRequirements.find((row) => row.requirement.id === req.id);
   return (
     <div className="modal-overlay">
       <div className="modal-box equipment-picker">
@@ -293,15 +322,19 @@ function EquipmentPicker({ business, req, soft, onBuyEquipment, onClose }: { bus
           <h2>Выбор оборудования</h2>
           <button className="icon-quiet" onClick={onClose} title="Закрыть"><X size={17} /></button>
         </div>
-        <div className="requirement-text mb-3">Нужно: {required?.icon} {required?.name} · {req.owned}/{req.quantity}</div>
+        <div className="requirement-text mb-3">Нужно для {business.name}: {required?.item.icon} {required?.item.name} · {req.owned}/{req.quantity}</div>
         <div className="equipment-picker-list">
-          {catalog.map((item) => {
-            const isRequired = item.id === req.equipmentId;
+          {equipmentRequirements.map(({ requirement, item }) => {
+            const done = requirement.owned >= requirement.quantity;
+            const selected = requirement.id === req.id;
             return (
-              <button className={`catalog-option ${isRequired ? "required" : ""}`} disabled={!isRequired || done || soft < req.unitCost} key={item.id} onClick={() => onBuyEquipment(business.id, req.id, item.id)}>
-                <span>{item.icon}</span>
-                <strong>{item.name}</strong>
-                <small>{isRequired ? `$${req.unitCost}` : "не требуется"}</small>
+              <button className={`catalog-option required ${selected ? "selected" : ""} ${done ? "done" : ""}`} disabled={done || soft < requirement.unitCost} key={requirement.id} onClick={() => onBuyEquipment(business.id, requirement.id, item.id)}>
+                <span className="catalog-option-icon">{item.icon}</span>
+                <span className="catalog-option-main">
+                  <strong>{item.name}</strong>
+                  <small>{done ? "Готово" : `${requirement.owned}/${requirement.quantity}`}</small>
+                </span>
+                <span className="catalog-option-price">{done ? "✓" : `$${requirement.unitCost}`}</span>
               </button>
             );
           })}
@@ -313,44 +346,88 @@ function EquipmentPicker({ business, req, soft, onBuyEquipment, onClose }: { bus
 
 function BusinessOptimization({ business, hard, onOptimize, onOptimizeAd }: { business: Business; hard: number; onOptimize: (id: number) => void; onOptimizeAd: (id: number) => void }) {
   const cost = nextOptimizationCost(business.optimizationLevel);
-  const nextBonus = nextOptimizationBonus(business.optimizationLevel);
   const pct = (business.optimizationLevel / OPTIMIZATION_COSTS.length) * 100;
   const canUpgrade = cost != null;
+  const optimizationMap = (
+    <>
+      <div className="prestige-steps" aria-label="Уровни оптимизации дохода">
+        {OPTIMIZATION_STEPS.map((level, index) => {
+          const step = index + 1;
+          const done = business.optimizationLevel >= step;
+          const active = canUpgrade && business.optimizationLevel + 1 === step;
+          return (
+            <div className={`prestige-step ${done ? "done" : ""} ${active ? "active" : ""}`} key={level.name}>
+              <span>{done ? <Check size={13} /> : step}</span>
+              <small>{level.name}</small>
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="progress-track prestige-progress"><div className="group-fill" style={{ width: `${pct}%` }} /></div>
+    </>
+  );
+
+  if (!canUpgrade) {
+    return <div className="business-optimization complete">{optimizationMap}</div>;
+  }
+
+  const nextBonus = nextOptimizationBonus(business.optimizationLevel);
   const currentBonus = optimizationBonus(business.optimizationLevel);
+  const currentStep = business.optimizationLevel > 0 ? OPTIMIZATION_STEPS[business.optimizationLevel - 1] : null;
+  const nextStep = OPTIMIZATION_STEPS[business.optimizationLevel] ?? null;
   const nextBusiness = canUpgrade ? { ...business, optimizationLevel: business.optimizationLevel + 1 } : business;
   const currentIncome = effectiveIncome(business);
   const nextIncome = effectiveIncome(nextBusiness);
   const incomeGain = Math.max(0, nextIncome - currentIncome);
+  const summaryTitle = canUpgrade && nextStep ? nextStep.name : currentStep?.name ?? "Базовая оптимизация";
+  const summaryText = canUpgrade && nextStep ? nextStep.description : currentStep?.description ?? "Все уровни взяты.";
   return (
-    <div className="business-optimization">
-      <div className="optimization-stats">
-        <div className="optimization-stat">
+    <div className={`business-optimization ${canUpgrade ? "" : "complete"}`}>
+      <div className="prestige-summary">
+        <div className="prestige-emblem"><Trophy size={20} /></div>
+        <div className="prestige-summary-main">
+          <span>{canUpgrade ? "Следующий шаг оптимизации" : "Оптимизация завершена"}</span>
+          <strong>{summaryTitle}</strong>
+          <p>{summaryText}</p>
+        </div>
+        <div className="prestige-level-pill">{business.optimizationLevel}/{OPTIMIZATION_COSTS.length}</div>
+      </div>
+
+      {optimizationMap}
+
+      <div className="prestige-economy">
+        <div className="prestige-economy-card">
           <span>Сейчас</span>
           <strong>+{Math.round(currentBonus * 100)}%</strong>
           <small>${currentIncome.toFixed(2)}/сек</small>
         </div>
-        <div className={`optimization-stat ${canUpgrade ? "next" : "done"}`}>
-          <span>{canUpgrade ? "Следующий" : "Максимум"}</span>
-          <strong>{canUpgrade ? `+${Math.round((nextBonus ?? 0) * 100)}%` : "MAX"}</strong>
-          <small>{canUpgrade ? `будет $${nextIncome.toFixed(2)}/сек` : "все уровни взяты"}</small>
+        <TrendingUp className="prestige-economy-arrow" size={21} />
+        <div className="prestige-economy-card highlighted">
+          <span>{canUpgrade ? "После шага" : "Итог"}</span>
+          <strong>+{Math.round((nextBonus ?? currentBonus) * 100)}%</strong>
+          <small>${nextIncome.toFixed(2)}/сек</small>
         </div>
       </div>
-      <div className="optimization-impact">
-        {canUpgrade ? (
+
+      <div className="optimization-impact prestige-impact">
+        {canUpgrade && nextStep ? (
           <>
-            <strong>Доход вырастет на ${incomeGain.toFixed(2)}/сек</strong>
-            <span>${currentIncome.toFixed(2)} → ${nextIncome.toFixed(2)}/сек</span>
+            <strong>Доход вырастет</strong>
+            <span>+${incomeGain.toFixed(2)}/сек к доходу · ${currentIncome.toFixed(2)} → ${nextIncome.toFixed(2)}/сек</span>
           </>
         ) : (
-          <strong>Оптимизация на максимуме</strong>
+          <>
+            <strong>Оптимизация на максимуме</strong>
+            <span>{currentStep?.description ?? "Все уровни взяты."}</span>
+          </>
         )}
       </div>
-      <div className="progress-track"><div className="group-fill" style={{ width: `${pct}%` }} /></div>
-      <div className="optimization-actions">
-        <button className="primary-button expand" disabled={!canUpgrade || hard < (cost ?? 0)} onClick={() => onOptimize(business.id)}>
-          <Gem size={17} /> {canUpgrade ? cost : "MAX"}
+      <div className="optimization-actions prestige-actions">
+        <button className="primary-button prestige-buy" disabled={!canUpgrade || hard < (cost ?? 0)} onClick={() => onOptimize(business.id)}>
+          <Gem size={17} /> {canUpgrade ? `Улучшить · ${cost}` : "MAX"}
         </button>
-        <button className="primary-button ad" disabled={!canUpgrade} onClick={() => onOptimizeAd(business.id)}>
+        <button className="primary-button prestige-ad" disabled={!canUpgrade} onClick={() => onOptimizeAd(business.id)}>
           <Tv size={17} /> За рекламу
         </button>
       </div>

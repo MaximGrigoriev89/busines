@@ -84,4 +84,5 @@ export interface Business {
   optimizationLevel: number;
   pendingExpansionReward: ExpansionReward | null;
   maxed: boolean;
+  mergedIntoHolding: boolean;
 }

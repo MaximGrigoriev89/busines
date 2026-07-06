@@ -140,7 +140,7 @@ export function OfflineIncomeModal({ reward, onClose, onDouble }: { reward: Offl
           <button className="primary-button expand" onClick={onDouble}>
             <Tv size={18} /> x2 за рекламу
           </button>
-          <button className="primary-button" onClick={onClose}>Забрать</button>
+          <button className="primary-button muted offline-income-claim" onClick={onClose}>Забрать без бонуса</button>
         </div>
       </div>
     </div>
@@ -163,10 +163,10 @@ export function VictoryModal({ open, onClose }: { open: boolean; onClose: () => 
   );
 }
 
-export function LevelUnlockModal({ name }: { name: string | null }) {
+export function LevelUnlockModal({ name, onClose }: { name: string | null; onClose: () => void }) {
   if (!name) return null;
   return (
-    <div className="modal-overlay unlock-overlay">
+    <div className="modal-overlay unlock-overlay" onClick={onClose}>
       <div className="ad-box unlock-box">
         <div className="unlock-stars">★★★</div>
         <h2>{name}</h2>

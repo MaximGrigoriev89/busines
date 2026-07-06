@@ -1,4 +1,4 @@
-import { MANAGER_COOLDOWN_SECONDS } from "./data";
+import { MANAGER_COOLDOWN_SECONDS, MAX_BUSINESS_TIER, OPTIMIZATION_COSTS } from "./data";
 import { createBusinesses, createManager, createPremiumManager, tickBusinesses } from "./game";
 import type { Business, Manager, OfflineIncome } from "./types";
 
@@ -119,9 +119,10 @@ function mergeBusinesses(saved: Business[] | undefined, fallback: Business[]): B
   return fallback.map((base) => {
     const item = saved.find((candidate) => candidate?.id === base.id);
     if (!item) return base;
+    const tier = clampInt(item.tier, 1, MAX_BUSINESS_TIER, base.tier);
     return {
       ...base,
-      tier: clampInt(item.tier, 1, 4, base.tier),
+      tier,
       opened: Boolean(item.opened),
       openCost: normalizeOpenCost(item, base),
       unlockRemaining: item.unlockRemaining == null ? null : Math.max(0, finiteOr(item.unlockRemaining, 0)),
@@ -132,9 +133,10 @@ function mergeBusinesses(saved: Business[] | undefined, fallback: Business[]): B
       requirements: item.opened && Array.isArray(item.requirements) ? item.requirements : base.requirements,
       expansionRemaining: Math.max(0, finiteOr(item.expansionRemaining, base.expansionRemaining)),
       expansionDuration: Math.max(0, finiteOr(item.expansionDuration, base.expansionDuration)),
-      optimizationLevel: clampInt(item.optimizationLevel, 0, 5, base.optimizationLevel),
+      optimizationLevel: clampInt(item.optimizationLevel, 0, OPTIMIZATION_COSTS.length, base.optimizationLevel),
       pendingExpansionReward: item.pendingExpansionReward ?? null,
-      maxed: Boolean(item.maxed),
+      maxed: Boolean(item.maxed) || tier >= MAX_BUSINESS_TIER,
+      mergedIntoHolding: Boolean(item.mergedIntoHolding),
     };
   });
 }

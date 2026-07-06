@@ -1,5 +1,6 @@
 import { Building2, Clock, Info, Lock, Tv, UserPlus } from "lucide-react";
-import { COLLECT_TIME, OPTIMIZATION_COSTS, RARITY_CLASS, RARITY_NAME } from "../data";
+import { businessArtForBusiness } from "../businessArt";
+import { COLLECT_TIME, MAX_BUSINESS_TIER, OPTIMIZATION_COSTS, RARITY_CLASS, RARITY_NAME } from "../data";
 import { effectiveIncome, formatMoney, optimizationBonus } from "../game";
 import { businessNotifications } from "../notifications";
 import { BusinessLevelStars } from "./BusinessLevelStars";
@@ -49,7 +50,7 @@ export function BusinessList(props: BusinessListProps) {
 }
 
 function CategoryStarProgress({ businesses }: { businesses: Business[] }) {
-  const maxBusinessLevels = 3;
+  const maxBusinessLevels = MAX_BUSINESS_TIER;
   const maxOptimizationLevels = OPTIMIZATION_COSTS.length;
   const levelDone = businesses.reduce((sum, business) => sum + (business.opened ? Math.min(maxBusinessLevels, business.tier) : 0), 0);
   const optimizationDone = businesses.reduce((sum, business) => sum + (business.opened ? business.optimizationLevel : 0), 0);
@@ -81,47 +82,61 @@ function StarProgressRow({ label, businesses, max, value }: { label: string; bus
 }
 
 function BusinessCard(props: BusinessListProps & { business: Business }) {
-  const { business, soft, hasFreeManager, hasStoredManager, incomeBursts, onSelect, onCollect, onOpenAssign, onOpenBusiness, onSkipUnlock } = props;
+  const { business, selectedId, soft, hasStoredManager, incomeBursts, onSelect, onCollect, onOpenAssign, onOpenBusiness, onSkipUnlock } = props;
   if (!business.opened) {
     return <LockedBusinessCard business={business} soft={soft} onOpenBusiness={onOpenBusiness} onSkipUnlock={onSkipUnlock} />;
   }
 
   const income = effectiveIncome(business);
   const manualCollect = income * COLLECT_TIME;
+  const merged = business.mergedIntoHolding;
   const bursts = incomeBursts.filter((burst) => burst.businessId === business.id);
-  const readyToCollect = !business.manager && business.collectReady;
-  const statusClass = business.manager ? "auto" : readyToCollect ? "ready" : "manual";
-  const statusText = business.manager ? "Авто" : readyToCollect ? "Готово" : "Ручной";
+  const readyToCollect = !merged && !business.manager && business.collectReady;
+  const statusClass = merged ? "merged" : business.manager ? "auto" : readyToCollect ? "ready" : "manual";
+  const statusText = merged ? "Холдинг" : business.manager ? "Авто" : readyToCollect ? "Готово" : "Ручной";
   const optBonus = optimizationBonus(business.optimizationLevel);
   const notifications = businessNotifications(business, soft);
+  const art = businessArtForBusiness(business);
   const handleCardClick = () => {
     if (readyToCollect) onCollect(business.id);
     else onSelect(business.id);
   };
   return (
-    <article className={`business-card ${business.manager ? "auto-active" : ""} ${readyToCollect ? "collectable" : ""}`} onClick={handleCardClick}>
+    <article className={`business-card ${business.manager && !merged ? "auto-active" : ""} ${readyToCollect ? "collectable" : ""} ${selectedId === business.id ? "selected" : ""} ${merged ? "merged-business" : ""}`} onClick={handleCardClick}>
       <BusinessNotificationBadges notifications={notifications} />
-      <div className="biz-icon">{business.icon}</div>
+      {art ? (
+        <div className="biz-art-thumb">
+          <img className="business-placeholder-art" src={art} alt={business.name} />
+        </div>
+      ) : (
+        <div className="biz-icon">{business.icon}</div>
+      )}
       <div className="min-w-0 flex-1">
         <div className="business-card-head">
-          <h3 className="truncate text-lg font-black">{business.name}</h3>
-          <BusinessLevelStars level={business.tier} compact />
-          <span className={`status-pill ${statusClass}`}>{statusText}</span>
-          {optBonus > 0 && <span className="optimization-badge">+{Math.round(optBonus * 100)}%</span>}
+          <h3 className="business-card-title">{business.name}</h3>
+          <div className="business-card-badges">
+            <BusinessLevelStars level={business.tier} compact />
+            {!readyToCollect && <span className={`status-pill ${statusClass}`}>{statusText}</span>}
+            {!merged && optBonus > 0 && <span className="optimization-badge">+{Math.round(optBonus * 100)}%</span>}
+          </div>
         </div>
-        <div className="business-card-meta">
-          <span>
-            <small>Доход</small>
-            <strong>${income.toFixed(1)}/сек</strong>
-          </span>
-        </div>
+        {!merged && (
+          <div className="business-card-meta">
+            <span>
+              <small>Доход</small>
+              <strong>${income.toFixed(1)}/сек</strong>
+            </span>
+          </div>
+        )}
         <BusinessProgress business={business} collectAmount={manualCollect} />
       </div>
       <div className="business-card-side">
         {business.manager ? (
           <ManagerBadge manager={business.manager} />
+        ) : readyToCollect ? (
+          null
         ) : (
-          <ManagerFrame isCollectable={readyToCollect} hasStoredManager={hasStoredManager} onOpenAssign={() => onOpenAssign(business.id)} />
+          <ManagerFrame hasStoredManager={hasStoredManager} onOpenAssign={() => onOpenAssign(business.id)} />
         )}
         <button
           className="business-card-open"
@@ -134,7 +149,6 @@ function BusinessCard(props: BusinessListProps & { business: Business }) {
           <Info size={18} />
         </button>
       </div>
-      {!hasFreeManager && business.manager && <div className="absolute right-3 top-3 text-[10px] font-black text-red-300">мест нет</div>}
       <IncomeBursts bursts={bursts} />
     </article>
   );
@@ -144,8 +158,10 @@ function LockedBusinessCard({ business, soft, onOpenBusiness, onSkipUnlock }: { 
   const waitingPrevious = business.unlockRemaining == null;
   const waitingTimer = business.unlockRemaining != null && business.unlockRemaining > 0;
   const ready = business.unlockRemaining === 0;
+  const hidden = !ready;
   const canOpen = ready && soft >= business.openCost;
   const notifications = businessNotifications(business, soft);
+  const art = businessArtForBusiness(business);
   const lockText = waitingPrevious
     ? "После предыдущего бизнеса"
     : waitingTimer
@@ -154,11 +170,21 @@ function LockedBusinessCard({ business, soft, onOpenBusiness, onSkipUnlock }: { 
   return (
     <article className={`business-card locked ${ready ? "unlock-ready" : ""}`}>
       <BusinessNotificationBadges notifications={notifications} />
-      <div className="biz-icon locked-icon"><Lock size={24} /></div>
+      {hidden ? (
+        <div className="biz-icon locked-icon"><Lock size={24} /></div>
+      ) : art ? (
+        <div className="biz-art-thumb locked-art">
+          <img className="business-placeholder-art" src={art} alt={business.name} />
+        </div>
+      ) : (
+        <div className="biz-icon locked-icon"><Lock size={24} /></div>
+      )}
       <div className="min-w-0 flex-1">
         <div className="business-card-head">
-          <h3 className="truncate text-lg font-black">{business.name}</h3>
-          <span className="status-pill manual">{ready ? "Доступен" : waitingTimer ? "Таймер" : "Закрыт"}</span>
+          <h3 className="business-card-title">{hidden ? "???" : business.name}</h3>
+          <div className="business-card-badges">
+            <span className="status-pill manual">{ready ? "Доступен" : waitingTimer ? "Таймер" : "Закрыт"}</span>
+          </div>
         </div>
         <div className="locked-business-line">{canOpen ? "Можно открыть" : lockText}</div>
       </div>
@@ -192,6 +218,9 @@ function BusinessNotificationBadges({ notifications }: { notifications: Business
 }
 
 function BusinessProgress({ business, collectAmount }: { business: Business; collectAmount: number }) {
+  if (business.mergedIntoHolding) {
+    return <div className="business-progress merged"><div className="business-progress-fill" /><span>Вошел в холдинг</span></div>;
+  }
   if (business.manager) {
     return <div className="business-progress auto"><div className="business-progress-fill" /><span>Авто сбор</span></div>;
   }
@@ -204,10 +233,7 @@ function BusinessProgress({ business, collectAmount }: { business: Business; col
   );
 }
 
-function ManagerFrame({ isCollectable, hasStoredManager, onOpenAssign }: { isCollectable: boolean; hasStoredManager: boolean; onOpenAssign: () => void }) {
-  if (isCollectable) {
-    return <div className="manager-frame collectable"><span className="manager-frame-icon">👤</span><small>$$$</small></div>;
-  }
+function ManagerFrame({ hasStoredManager, onOpenAssign }: { hasStoredManager: boolean; onOpenAssign: () => void }) {
   return (
     <button className="manager-frame action" onClick={(event) => { event.stopPropagation(); onOpenAssign(); }} title="Назначить менеджера">
       <UserPlus size={20} />
@@ -221,7 +247,7 @@ function ManagerBadge({ manager }: { manager: Manager }) {
     <div className="manager-badge">
       <div className={`portrait sm ${RARITY_CLASS[manager.rarity]}`}>{manager.face}</div>
       <div className="manager-badge-text">
-        <div className="truncate text-sm font-black">{RARITY_NAME[manager.rarity]}</div>
+        <div className="manager-card-name">{RARITY_NAME[manager.rarity]}</div>
       </div>
     </div>
   );

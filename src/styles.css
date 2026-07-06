@@ -94,6 +94,21 @@ button:disabled {
   white-space: nowrap;
 }
 
+.income-pill.boosted {
+  border-color: rgba(250, 204, 21, 0.55);
+  background: #2a220d;
+}
+
+.income-pill em {
+  display: block;
+  margin-top: 3px;
+  color: #facc15;
+  font-size: 10px;
+  font-style: normal;
+  font-weight: 900;
+  line-height: 1;
+}
+
 .goal-panel, .panel, .detail-panel {
   padding: 14px 16px;
   background: #11182b;
@@ -300,8 +315,13 @@ button:disabled {
 }
 
 .tab-level {
-  font-size: 12px;
-  line-height: 1;
+  display: -webkit-box;
+  overflow: hidden;
+  font-size: 11px;
+  line-height: 1.08;
+  text-align: center;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 
 .tab-stars {
@@ -316,6 +336,15 @@ button:disabled {
 }
 
 .tab:not(.active) .tab-stars {
+  color: #64748b;
+}
+
+.tab-lock {
+  position: absolute;
+  right: 6px;
+  bottom: 5px;
+  display: grid;
+  place-items: center;
   color: #64748b;
 }
 
@@ -375,10 +404,16 @@ button:disabled {
   color: #cbd5e1;
 }
 
+.status-pill.merged {
+  color: #f59e0b;
+  border-color: rgba(245, 158, 11, 0.42);
+  background: #fff7ed;
+}
+
 .business-notifications {
   position: absolute;
-  top: 8px;
-  right: 8px;
+  top: 7px;
+  left: 7px;
   z-index: 5;
   display: flex;
   pointer-events: none;

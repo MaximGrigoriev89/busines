@@ -44,6 +44,16 @@
   animation: autoFlow 1.1s linear infinite;
 }
 
+.business-progress.merged {
+  border-color: rgba(250, 204, 21, 0.45);
+  background: #1f1b10;
+}
+
+.business-progress.merged .business-progress-fill {
+  width: 100%;
+  background: linear-gradient(90deg, #facc15, #38bdf8);
+}
+
 .business-progress.locked-progress {
   border-color: #334155;
 }
@@ -68,6 +78,16 @@
 
 .business-card.auto-active .biz-icon {
   animation: autoPulse 1.4s ease-in-out infinite;
+}
+
+.business-card.merged-business {
+  border-color: rgba(250, 204, 21, 0.38);
+  background: linear-gradient(135deg, #1b1d2c, #201a12);
+}
+
+.business-card.merged-business .biz-icon {
+  color: #fef3c7;
+  background: #33280f;
 }
 
 .income-burst {
@@ -102,10 +122,123 @@
   animation: screenEnterSide 0.26s cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
 
+.holding-merge-overlay {
+  animation: holdingOverlayIn 0.18s ease-out both;
+}
+
+.holding-merge-box {
+  animation: holdingBoxIn 0.3s cubic-bezier(0.2, 0.85, 0.25, 1.12) both;
+}
+
+.holding-merge-core {
+  animation: holdingCorePulse 1.15s ease-in-out infinite;
+}
+
+.holding-merge-business {
+  opacity: 0;
+  transform: translate(var(--merge-from-x), var(--merge-from-y)) scale(0.84);
+  animation: holdingBusinessMerge 1.05s cubic-bezier(0.18, 0.82, 0.22, 1) both;
+  animation-delay: calc(var(--merge-index) * 95ms);
+}
+
+.holding-profit-card.after,
+.holding-profit-gain {
+  animation: holdingProfitPop 0.46s ease-out both;
+  animation-delay: 0.78s;
+}
+
+.merger-panel.merged .merger-emblem {
+  animation: holdingEarnPulse 1.45s ease-in-out infinite;
+}
+
+.merger-panel.merged .holding-income-stream span {
+  animation: holdingIncomeFloat 1.55s ease-out infinite;
+}
+
+.merger-panel.merged .holding-income-stream span:nth-child(2) {
+  animation-delay: 0.34s;
+}
+
+.merger-panel.merged .holding-income-stream span:nth-child(3) {
+  animation-delay: 0.68s;
+}
+
+.merger-panel.merged .merger-progress .group-fill {
+  background-size: 200% 100%;
+  animation: autoFlow 1.35s linear infinite;
+}
+
 @keyframes incomeFloat {
   0% { opacity: 0; transform: translateY(10px) scale(0.92); }
   15% { opacity: 1; transform: translateY(0) scale(1); }
   100% { opacity: 0; transform: translateY(-34px) scale(1.08); }
+}
+
+@keyframes holdingEarnPulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 rgba(34, 197, 94, 0);
+  }
+  45% {
+    transform: scale(1.05);
+    box-shadow: 0 0 18px rgba(34, 197, 94, 0.22);
+  }
+}
+
+@keyframes holdingIncomeFloat {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, 4px) scale(0.78);
+  }
+  18% {
+    opacity: 1;
+  }
+  78% {
+    opacity: 1;
+    transform: translate(-50%, -22px) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -32px) scale(0.88);
+  }
+}
+
+@keyframes holdingOverlayIn {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+@keyframes holdingBoxIn {
+  0% { opacity: 0; transform: translateY(14px) scale(0.96); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes holdingCorePulse {
+  0%, 100% { transform: scale(1); filter: brightness(1); }
+  45% { transform: scale(1.06); filter: brightness(1.22); }
+}
+
+@keyframes holdingBusinessMerge {
+  0% {
+    opacity: 0;
+    transform: translate(var(--merge-from-x), var(--merge-from-y)) scale(0.84);
+  }
+  16% {
+    opacity: 1;
+  }
+  68% {
+    opacity: 1;
+    transform: translate(0, 0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(0, 0) scale(0.36);
+  }
+}
+
+@keyframes holdingProfitPop {
+  0% { opacity: 0; transform: translateY(8px) scale(0.96); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 @keyframes screenEnterUp {
@@ -120,8 +253,21 @@
 
 @media (prefers-reduced-motion: reduce) {
   .main-screen-transition,
-  .detail-screen-transition {
+  .detail-screen-transition,
+  .holding-merge-overlay,
+  .holding-merge-box,
+  .holding-merge-core,
+  .holding-merge-business,
+  .merger-panel.merged .merger-emblem,
+  .merger-panel.merged .holding-income-stream span,
+  .merger-panel.merged .merger-progress .group-fill,
+  .holding-profit-card.after,
+  .holding-profit-gain {
     animation: none;
+  }
+
+  .holding-merge-business {
+    opacity: 0;
   }
 }
 
@@ -199,6 +345,31 @@
   color: #94a3b8;
   font-size: 13px;
   font-weight: 900;
+}
+
+.reward-history {
+  padding: 10px 11px;
+  border: 1px solid rgba(250, 204, 21, 0.34);
+  border-radius: 8px;
+  background: rgba(250, 204, 21, 0.09);
+  text-align: left;
+}
+
+.reward-history span {
+  display: block;
+  margin-bottom: 4px;
+  color: #fef3c7;
+  font-size: 11px;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.reward-history p {
+  margin: 0;
+  color: #fde68a;
+  font-size: 13px;
+  font-weight: 850;
+  line-height: 1.35;
 }
 
 .reward-income-flow {
