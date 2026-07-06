@@ -1,5 +1,5 @@
 import { MANAGER_COOLDOWN_SECONDS } from "./data";
-import { createBusinesses, createManager, tickBusinesses } from "./game";
+import { createBusinesses, createManager, createPremiumManager, tickBusinesses } from "./game";
 import type { Business, Manager, OfflineIncome } from "./types";
 
 const SAVE_KEY = "business-empire-save-v2";
@@ -121,13 +121,13 @@ function mergeBusinesses(saved: Business[] | undefined, fallback: Business[]): B
       ...base,
       tier: clampInt(item.tier, 1, 4, base.tier),
       opened: Boolean(item.opened),
-      openCost: finiteOr(item.openCost, base.openCost),
+      openCost: normalizeOpenCost(item, base),
       unlockRemaining: item.unlockRemaining == null ? null : Math.max(0, finiteOr(item.unlockRemaining, 0)),
       manager: sanitizeManager(item.manager),
       collectTimer: Math.max(0, finiteOr(item.collectTimer, base.collectTimer)),
       collectReady: Boolean(item.collectReady),
       workedSeconds: Math.max(0, finiteOr(item.workedSeconds, base.workedSeconds)),
-      requirements: Array.isArray(item.requirements) ? item.requirements : base.requirements,
+      requirements: item.opened && Array.isArray(item.requirements) ? item.requirements : base.requirements,
       expansionRemaining: Math.max(0, finiteOr(item.expansionRemaining, base.expansionRemaining)),
       expansionDuration: Math.max(0, finiteOr(item.expansionDuration, base.expansionDuration)),
       optimizationLevel: clampInt(item.optimizationLevel, 0, 5, base.optimizationLevel),
@@ -144,7 +144,13 @@ function sanitizeManagers(managers: Array<Manager | null> | undefined, fallback:
 
 function sanitizeManager(manager: Manager | null | undefined): Manager | null {
   if (!manager || typeof manager.id !== "number") return null;
-  return manager;
+  return manager.id >= 10_000 ? createPremiumManager(manager.id - 10_000) : createManager(manager.id);
+}
+
+function normalizeOpenCost(item: Business, base: Business): number {
+  const stored = finiteOr(item.openCost, base.openCost);
+  if (item.opened) return stored;
+  return stored > base.openCost * 1.35 ? base.openCost : stored;
 }
 
 function finiteOr(value: number, fallback: number): number {

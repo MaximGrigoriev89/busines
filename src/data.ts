@@ -8,21 +8,21 @@ export const AD_HINT_SECONDS = 6;
 export const AD_DURATION_SECONDS = AD_HINT_SECONDS * 5;
 export const PREMIUM_MANAGER_COST = 7;
 export const MANAGER_COOLDOWN_SECONDS = 20 * 60;
-export const OPTIMIZATION_COSTS = [1, 2, 4, 7, 11];
+export const OPTIMIZATION_COSTS = [1, 2, 4, 8, 12];
 export const OPTIMIZATION_BONUSES = [0.05, 0.08, 0.12, 0.17, 0.23];
-export const TIER_INCOME_MULTIPLIERS = [1, 3, 7, 15];
+export const TIER_INCOME_MULTIPLIERS = [1, 2.7, 6.2, 12.5];
 
 export const EXPANSION_BALANCE = [
-  { workSeconds: 60, costMultiplier: 0.35, timeMultiplier: 0.55 },
-  { workSeconds: 180, costMultiplier: 1.9, timeMultiplier: 1.8 },
-  { workSeconds: 420, costMultiplier: 5.2, timeMultiplier: 3.8 },
+  { workSeconds: 75, costMultiplier: 0.38, timeMultiplier: 0.7 },
+  { workSeconds: 300, costMultiplier: 2.3, timeMultiplier: 2.3 },
+  { workSeconds: 720, costMultiplier: 7, timeMultiplier: 5 },
 ];
 
 export const CATEGORY_UNLOCK_GOALS = [
-  { targetCategory: 1, cost: 5_000 },
-  { targetCategory: 2, cost: 50_000 },
-  { targetCategory: 3, cost: 250_000 },
-  { targetCategory: 4, cost: 1_000_000 },
+  { targetCategory: 1, cost: 8_000 },
+  { targetCategory: 2, cost: 90_000 },
+  { targetCategory: 3, cost: 450_000 },
+  { targetCategory: 4, cost: 2_200_000 },
 ];
 
 export const AD_SLOGANS = [
@@ -258,11 +258,11 @@ export const RARITY_NAME: Record<Rarity, string> = {
 };
 
 export const MANAGER_RARITY_STATS: Record<Rarity, { efficiency: number; salary: number }> = {
-  white: { efficiency: 0.72, salary: 0.75 },
-  green: { efficiency: 0.92, salary: 1 },
-  blue: { efficiency: 1.2, salary: 1.45 },
-  purple: { efficiency: 1.55, salary: 2.2 },
-  orange: { efficiency: 2.1, salary: 3.2 },
+  white: { efficiency: 0.68, salary: 0.7 },
+  green: { efficiency: 0.88, salary: 0.95 },
+  blue: { efficiency: 1.12, salary: 1.35 },
+  purple: { efficiency: 1.42, salary: 2.05 },
+  orange: { efficiency: 1.9, salary: 3 },
 };
 
 export const RARITY_CLASS: Record<Rarity, string> = {

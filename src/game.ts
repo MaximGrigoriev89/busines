@@ -140,7 +140,7 @@ export function expansionProgress(business: Business) {
 }
 
 export function expansionDurationSeconds(business: Business): number {
-  const baseByTier = [12, 45, 120][business.tier - 1] ?? 180;
+  const baseByTier = [18, 90, 240][business.tier - 1] ?? 300;
   const levelMult = 1 + business.catIdx * 0.55;
   const orderMult = 1 + (business.id % 4) * 0.18;
   const incomeMult = 1 + business.base * 0.012;
@@ -201,12 +201,12 @@ export function unlockDelaySeconds(levelIndex: number): number {
 }
 
 export function nextBusinessOpenCost(balanceAfterPurchase: number, businessId: number, levelIndex: number): number {
-  const earlyCosts = [100, 140, 260, 480];
+  const earlyCosts = [100, 160, 320, 620];
   if (businessId < earlyCosts.length) return earlyCosts[businessId];
   const level = levelIndex + 1;
   const order = businessId % 4;
-  const baseCost = 620 * Math.pow(1.95, businessId - 4) * (1 + levelIndex * 0.8 + order * 0.22);
-  const balanceCost = balanceAfterPurchase * (1.15 + level * 0.2);
+  const baseCost = 1100 * Math.pow(1.68, businessId - 4) * (1 + levelIndex * 0.9 + order * 0.25);
+  const balanceCost = balanceAfterPurchase * (1.05 + level * 0.16);
   return roundTo5(Math.max(baseCost, balanceCost));
 }
 

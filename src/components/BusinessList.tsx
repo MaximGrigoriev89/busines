@@ -1,5 +1,5 @@
 import { Building2, Check, Clock, Info, Lock, Tv, UserPlus } from "lucide-react";
-import { COLLECT_TIME, RARITY_CLASS, RARITY_NAME } from "../data";
+import { COLLECT_TIME, OPTIMIZATION_COSTS, RARITY_CLASS, RARITY_NAME } from "../data";
 import { effectiveIncome, formatMoney, optimizationBonus } from "../game";
 import { businessNotifications } from "../notifications";
 import { BusinessLevelStars } from "./BusinessLevelStars";
@@ -34,7 +34,10 @@ export function BusinessList(props: BusinessListProps) {
   return (
     <section className="business-list-panel">
       <div className="business-list-head">
-        <div className="section-title">Бизнесы</div>
+        <div className="business-list-title">
+          <div className="section-title">Бизнесы</div>
+          <CategoryStarProgress businesses={items} />
+        </div>
       </div>
       <div className="business-list">
         {items.map((business) => (
@@ -42,6 +45,38 @@ export function BusinessList(props: BusinessListProps) {
         ))}
       </div>
     </section>
+  );
+}
+
+function CategoryStarProgress({ businesses }: { businesses: Business[] }) {
+  const maxBusinessLevels = 3;
+  const maxOptimizationLevels = OPTIMIZATION_COSTS.length;
+  const levelDone = businesses.reduce((sum, business) => sum + (business.opened ? Math.min(maxBusinessLevels, business.tier) : 0), 0);
+  const optimizationDone = businesses.reduce((sum, business) => sum + (business.opened ? business.optimizationLevel : 0), 0);
+  return (
+    <div className="category-star-progress" aria-label={`Прогресс категории: уровни ${levelDone}, оптимизация ${optimizationDone}`}>
+      <StarProgressRow label="Уровни" businesses={businesses} max={maxBusinessLevels} value={(business) => (business.opened ? business.tier : 0)} />
+      <StarProgressRow label="Оптимизация" businesses={businesses} max={maxOptimizationLevels} value={(business) => (business.opened ? business.optimizationLevel : 0)} />
+    </div>
+  );
+}
+
+function StarProgressRow({ label, businesses, max, value }: { label: string; businesses: Business[]; max: number; value: (business: Business) => number }) {
+  return (
+    <div className="category-star-row">
+      <span>{label}</span>
+      <div className="category-star-groups">
+        {businesses.map((business) => (
+          <div className="category-star-group" key={business.id} title={business.name}>
+            {Array.from({ length: max }, (_, index) => (
+              <span className={index < value(business) ? "category-star filled" : "category-star"} key={index}>
+                {index < value(business) ? "★" : "☆"}
+              </span>
+            ))}
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }
 
@@ -65,6 +100,7 @@ function BusinessCard(props: BusinessListProps & { business: Business }) {
   };
   return (
     <article className={`business-card ${business.manager ? "auto-active" : ""} ${readyToCollect ? "collectable" : ""}`} onClick={handleCardClick}>
+      <BusinessNotificationBadges notifications={notifications} />
       <div className="biz-icon">{business.icon}</div>
       <div className="min-w-0 flex-1">
         <div className="business-card-head">
@@ -73,7 +109,6 @@ function BusinessCard(props: BusinessListProps & { business: Business }) {
           <span className={`status-pill ${statusClass}`}>{statusText}</span>
           {optBonus > 0 && <span className="optimization-badge">+{Math.round(optBonus * 100)}%</span>}
         </div>
-        <BusinessNotificationBadges notifications={notifications} />
         <div className="business-card-meta">
           <span>
             <small>Доход</small>
@@ -118,13 +153,13 @@ function LockedBusinessCard({ business, soft, onOpenBusiness, onSkipUnlock }: { 
       : `Цена $${formatMoney(business.openCost)}`;
   return (
     <article className={`business-card locked ${ready ? "unlock-ready" : ""}`}>
+      <BusinessNotificationBadges notifications={notifications} />
       <div className="biz-icon locked-icon"><Lock size={24} /></div>
       <div className="min-w-0 flex-1">
         <div className="business-card-head">
           <h3 className="truncate text-lg font-black">{business.name}</h3>
           <span className="status-pill manual">{ready ? "Доступен" : waitingTimer ? "Таймер" : "Закрыт"}</span>
         </div>
-        <BusinessNotificationBadges notifications={notifications} />
         <div className="locked-business-line">{canOpen ? "Можно открыть" : lockText}</div>
       </div>
       <div className="business-card-side">
@@ -147,13 +182,11 @@ function LockedBusinessCard({ business, soft, onOpenBusiness, onSkipUnlock }: { 
 
 function BusinessNotificationBadges({ notifications }: { notifications: BusinessNotification[] }) {
   if (notifications.length === 0) return null;
+  const priority: BusinessNotification["tone"][] = ["reward", "open", "upgrade"];
+  const tone = priority.find((item) => notifications.some((notification) => notification.tone === item)) ?? notifications[0].tone;
   return (
-    <div className="business-notifications">
-      {notifications.map((notification) => (
-        <span className={`business-notification ${notification.tone}`} key={notification.tone}>
-          {notification.label}
-        </span>
-      ))}
+    <div className={`business-notifications ${tone}`} aria-label={`Доступно действий: ${notifications.length}`}>
+      <span className="business-notification">{notifications.length > 1 ? notifications.length : ""}</span>
     </div>
   );
 }
