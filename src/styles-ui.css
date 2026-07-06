@@ -1,0 +1,230 @@
+.manager-badge {
+  width: 180px;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  border-radius: 8px;
+  background: #101628;
+}
+
+.collect-ring, .collect-ready, .assign-button {
+  width: 54px;
+  height: 54px;
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+}
+
+.collect-ring {
+  border: 7px solid #101628;
+}
+
+.collect-ready {
+  background: #123322;
+  color: #4ade80;
+  font-size: 15px;
+  font-weight: 900;
+  box-shadow: 0 0 18px rgba(74, 222, 128, 0.35);
+}
+
+.assign-button {
+  background: #123322;
+  color: #4ade80;
+}
+
+.detail-panel h2, .modal-box h2 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 900;
+}
+
+.empty-detail {
+  display: grid;
+  place-items: center;
+  min-height: 96px;
+  color: #64748b;
+  font-size: 14px;
+  font-weight: 800;
+  text-align: center;
+}
+
+.upgrade-list {
+  display: grid;
+  gap: 7px;
+}
+
+.upgrade-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: #151a31;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.upgrade-check {
+  width: 24px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  border: 2px solid #35405f;
+  border-radius: 7px;
+}
+
+.upgrade-check.on {
+  border-color: #4ade80;
+  background: #4ade80;
+  color: #07110b;
+}
+
+.primary-button {
+  width: 100%;
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 12px;
+  border: 0;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 900;
+}
+
+.primary-button.buy {
+  color: #bbf7d0;
+  background: linear-gradient(135deg, #166534, #14532d);
+}
+
+.primary-button.ad {
+  color: #fed7aa;
+  background: linear-gradient(135deg, #9a3412, #7c2d12);
+}
+
+.primary-button.expand, .invest-button {
+  color: #dbeafe;
+  background: linear-gradient(135deg, #2563eb, #6d28d9);
+}
+
+.primary-button.muted {
+  color: #facc15;
+  background: #202747;
+}
+
+.timer-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  margin-top: 12px;
+  color: #94a3b8;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.group-opt {
+  flex: 0 0 auto;
+  padding: 14px 16px 16px;
+  border-top: 1px solid #29304f;
+  background: #0b1020;
+}
+
+.level-badge {
+  flex: 0 0 auto;
+  padding: 5px 9px;
+  border-radius: 999px;
+  background: #222a48;
+  color: #cbd5e1;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.invest-button {
+  min-width: 96px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 0;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.icon-danger, .icon-quiet {
+  width: 32px;
+  height: 32px;
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 8px;
+}
+
+.icon-danger {
+  color: #fecaca;
+  background: #3b151d;
+}
+
+.icon-quiet {
+  color: #cbd5e1;
+  background: #222a48;
+}
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(0, 0, 0, 0.78);
+}
+
+.modal-box, .ad-box {
+  width: min(100%, 500px);
+  max-height: 82dvh;
+  overflow-y: auto;
+  padding: 20px;
+  border: 1px solid #29304f;
+  border-radius: 8px;
+  background: #151a31;
+}
+
+.manager-choice {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid #29304f;
+  border-radius: 8px;
+  background: #101628;
+}
+
+.empty-modal {
+  padding: 28px 0;
+  text-align: center;
+  color: #64748b;
+  font-weight: 800;
+}
+
+.victory {
+  display: grid;
+  gap: 12px;
+  text-align: center;
+}
+
+.victory p {
+  color: #94a3b8;
+  font-size: 15px;
+  line-height: 1.45;
+}
