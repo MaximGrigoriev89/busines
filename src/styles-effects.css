@@ -70,21 +70,6 @@
   animation: autoPulse 1.4s ease-in-out infinite;
 }
 
-.collect-hint {
-  position: absolute;
-  right: 14px;
-  bottom: 10px;
-  pointer-events: none;
-  padding: 4px 8px;
-  border-radius: 999px;
-  color: #052e16;
-  background: #4ade80;
-  font-size: 11px;
-  font-weight: 900;
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-}
-
 .income-burst {
   position: absolute;
   right: 20px;
@@ -104,10 +89,40 @@
   font-size: 14px;
 }
 
+.screen-transition {
+  min-height: 100%;
+  will-change: opacity, transform;
+}
+
+.main-screen-transition {
+  animation: screenEnterUp 0.24s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.detail-screen-transition {
+  animation: screenEnterSide 0.26s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
 @keyframes incomeFloat {
   0% { opacity: 0; transform: translateY(10px) scale(0.92); }
   15% { opacity: 1; transform: translateY(0) scale(1); }
   100% { opacity: 0; transform: translateY(-34px) scale(1.08); }
+}
+
+@keyframes screenEnterUp {
+  0% { opacity: 0.2; transform: translateY(14px) scale(0.99); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes screenEnterSide {
+  0% { opacity: 0.2; transform: translateX(18px) scale(0.99); }
+  100% { opacity: 1; transform: translateX(0) scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .main-screen-transition,
+  .detail-screen-transition {
+    animation: none;
+  }
 }
 
 @keyframes autoPulse {
@@ -123,4 +138,124 @@
 @keyframes autoFlow {
   from { background-position: 0% 0; }
   to { background-position: 200% 0; }
+}
+
+@keyframes goalReadyPulse {
+  0%, 100% { box-shadow: 0 0 0 rgba(250, 204, 21, 0); transform: scale(1); }
+  50% { box-shadow: 0 0 18px rgba(250, 204, 21, 0.32); transform: scale(1.03); }
+}
+
+.unlock-box {
+  display: grid;
+  gap: 8px;
+  text-align: center;
+  animation: unlockPop 1.1s ease-out both;
+}
+
+.unlock-box p {
+  color: #cbd5e1;
+  font-weight: 800;
+}
+
+.unlock-stars {
+  color: #facc15;
+  font-size: 32px;
+  letter-spacing: 2px;
+  animation: unlockStars 0.9s ease-in-out infinite;
+}
+
+@keyframes unlockPop {
+  0% { opacity: 0; transform: translateY(18px) scale(0.9); }
+  25% { opacity: 1; transform: translateY(0) scale(1.04); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes unlockStars {
+  0%, 100% { filter: brightness(1); transform: translateY(0); }
+  50% { filter: brightness(1.45); transform: translateY(-2px); }
+}
+
+.upgrade-reward-modal {
+  display: grid;
+  gap: 12px;
+  text-align: center;
+  animation: rewardPop 0.42s ease-out both;
+}
+
+.reward-burst-icon {
+  width: 68px;
+  height: 68px;
+  display: grid;
+  place-items: center;
+  justify-self: center;
+  border-radius: 999px;
+  color: #fef3c7;
+  background: radial-gradient(circle at 35% 30%, #facc15, #2563eb 72%);
+  box-shadow: 0 0 26px rgba(250, 204, 21, 0.35);
+  animation: rewardRocket 1.2s ease-in-out infinite;
+}
+
+.reward-tier {
+  color: #94a3b8;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.reward-income-flow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 34px minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid #29304f;
+  border-radius: 8px;
+  background: #101628;
+}
+
+.reward-income-flow span,
+.reward-income-flow strong {
+  min-width: 0;
+  font-size: 16px;
+  font-weight: 900;
+}
+
+.reward-income-flow span {
+  color: #94a3b8;
+}
+
+.reward-income-flow svg,
+.reward-income-flow strong {
+  color: #4ade80;
+}
+
+.reward-gain,
+.reward-gem {
+  min-height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 900;
+}
+
+.reward-gain {
+  color: #bbf7d0;
+  background: #11231d;
+}
+
+.reward-gem {
+  color: #fef3c7;
+  background: #33280f;
+}
+
+@keyframes rewardPop {
+  0% { opacity: 0; transform: translateY(18px) scale(0.92); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes rewardRocket {
+  0%, 100% { transform: translateY(0) rotate(-5deg); }
+  50% { transform: translateY(-4px) rotate(5deg); }
 }

@@ -146,6 +146,11 @@
   background: linear-gradient(135deg, #9a3412, #7c2d12);
 }
 
+.primary-button.danger {
+  color: #fecaca;
+  background: linear-gradient(135deg, #991b1b, #7f1d1d);
+}
+
 .primary-button.expand, .invest-button {
   color: #dbeafe;
   background: linear-gradient(135deg, #2563eb, #6d28d9);
@@ -182,6 +187,29 @@
   color: #cbd5e1;
   font-size: 12px;
   font-weight: 900;
+}
+
+.business-level-stars {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  color: #facc15;
+  font-size: 12px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.business-level-stars span {
+  margin-left: 3px;
+  color: #fef3c7;
+}
+
+.business-level-stars.compact {
+  flex: 0 0 auto;
+  padding: 3px 6px;
+  border: 1px solid rgba(250, 204, 21, 0.45);
+  border-radius: 999px;
+  background: #33280f;
 }
 
 .invest-button {
@@ -237,6 +265,165 @@
   background: #151a31;
 }
 
+.ad-slogan {
+  margin-top: 14px;
+  padding: 12px;
+  border-radius: 8px;
+  color: #fef3c7;
+  background: #2d2411;
+  font-size: 17px;
+  font-weight: 900;
+  line-height: 1.25;
+  text-align: center;
+}
+
+.ad-quiz-box {
+  display: grid;
+  gap: 12px;
+  text-align: center;
+}
+
+.ad-countdown {
+  color: #fff;
+  font-size: 68px;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.ad-hint-card,
+.ad-result {
+  display: grid;
+  gap: 6px;
+  padding: 14px;
+  border-radius: 8px;
+  background: #101628;
+}
+
+.ad-hint-card small,
+.ad-result small {
+  color: #94a3b8;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.ad-hint-card strong {
+  color: #fef3c7;
+  font-size: 17px;
+  font-weight: 900;
+  line-height: 1.25;
+}
+
+.ad-hint-progress {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.ad-hint-progress span {
+  height: 7px;
+  border-radius: 999px;
+  background: #29304f;
+}
+
+.ad-hint-progress span.active {
+  background: #facc15;
+}
+
+.ad-question {
+  color: #f8fafc;
+  font-size: 22px;
+  font-weight: 900;
+}
+
+.ad-quiz-options {
+  display: grid;
+  gap: 8px;
+}
+
+.ad-quiz-option {
+  min-height: 42px;
+  padding: 9px 10px;
+  border: 1px solid #29304f;
+  border-radius: 8px;
+  color: #dbeafe;
+  background: #151a31;
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.ad-result {
+  place-items: center;
+}
+
+.ad-result.correct {
+  color: #bbf7d0;
+  background: #11231d;
+}
+
+.ad-result.wrong {
+  color: #fecaca;
+  background: #30161d;
+}
+
+.ad-result strong {
+  color: inherit;
+  font-size: 20px;
+  font-weight: 900;
+}
+
+.ad-result span {
+  color: #dbeafe;
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.offline-income-modal {
+  display: grid;
+  gap: 14px;
+  text-align: center;
+}
+
+.offline-income-icon {
+  width: 58px;
+  height: 58px;
+  display: grid;
+  place-items: center;
+  margin: 0 auto;
+  border: 1px solid rgba(74, 222, 128, 0.55);
+  border-radius: 8px;
+  color: #bbf7d0;
+  background: #123322;
+  font-size: 30px;
+  font-weight: 900;
+}
+
+.offline-income-modal h2 {
+  margin-top: 6px;
+  color: #f8fafc;
+  font-size: 20px;
+  font-weight: 900;
+}
+
+.offline-income-amount {
+  padding: 14px;
+  border-radius: 8px;
+  color: #bbf7d0;
+  background: #11251d;
+  font-size: 32px;
+  font-weight: 900;
+}
+
+.offline-income-modal p {
+  color: #94a3b8;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.offline-income-actions {
+  display: grid;
+  gap: 8px;
+}
+
 .manager-modal-grid {
   display: grid;
   gap: 10px;
@@ -266,6 +453,27 @@
   border: 0;
   background: transparent;
   color: inherit;
+}
+
+.manager-info-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 8px;
+  background: #101628;
+}
+
+.manager-efficiency {
+  color: #dbeafe;
+}
+
+.manager-efficiency.bad {
+  color: #f87171;
+}
+
+.manager-efficiency.good {
+  color: #4ade80;
 }
 
 .modal-search {

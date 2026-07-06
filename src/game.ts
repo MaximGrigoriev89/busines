@@ -1,4 +1,4 @@
-import { CATEGORIES, COLLECT_TIME, EQUIPMENT_OPTIONS, EXPANSION_BALANCE, FACES, LONG_ACTION_OPTIONS, MANAGER_RARITY_STATS, OPTIMIZATION_COSTS, RARITIES } from "./data";
+import { CATEGORIES, COLLECT_TIME, EQUIPMENT_OPTIONS, EXPANSION_BALANCE, FACES, LONG_ACTION_OPTIONS, MANAGER_RARITY_STATS, OPTIMIZATION_BONUSES, OPTIMIZATION_COSTS, RARITIES, TIER_INCOME_MULTIPLIERS } from "./data";
 import type { Business, ExpansionRequirement, Manager } from "./types";
 
 export function createBusinesses(): Business[] {
@@ -12,6 +12,7 @@ export function createBusinesses(): Business[] {
       icon: seed.ic,
       catIdx,
       base: seed.base,
+      minSalary: seed.salary,
       tier: 1,
       opened: false,
       openCost: businessId === 0 ? 100 : nextBusinessOpenCost(100, businessId, catIdx),
@@ -21,7 +22,10 @@ export function createBusinesses(): Business[] {
       collectReady: false,
       workedSeconds: 0,
       requirements: createExpansionRequirements(businessId, catIdx, 1, seed.base),
+      expansionRemaining: 0,
+      expansionDuration: 0,
       optimizationLevel: 0,
+      pendingExpansionReward: null,
       maxed: false,
       };
     }),
@@ -30,25 +34,41 @@ export function createBusinesses(): Business[] {
 
 export function createManager(seed: number): Manager {
   const rarity = RARITIES[seed % RARITIES.length];
+  return makeManager(seed, rarity);
+}
+
+export function createPremiumManager(seed: number): Manager {
+  const manager = makeManager(seed + 10_000, "orange");
+  const efficiency = round2(manager.efficiency + 0.3);
+  const salary = round2(manager.salary + 0.55);
+  return {
+    ...manager,
+    efficiency,
+    salary,
+    desc: `Прем · эфф. ${Math.round(efficiency * 100)}% · зарпл. x${salary.toFixed(2)}`,
+  };
+}
+
+function makeManager(seed: number, rarity: Manager["rarity"]): Manager {
   const face = FACES[seed % FACES.length];
   const base = MANAGER_RARITY_STATS[rarity];
   const spread = ((seed * 17) % 9) / 100;
   const efficiency = round2(base.efficiency + spread);
-  const salary = round2(base.salary + spread * 1.1);
+  const salary = round2(base.salary + spread * 1.8);
   return {
     id: seed,
     face,
     rarity,
     efficiency,
     salary,
-    desc: `Эфф. ${Math.round(efficiency * 100)}% · зарплата $${salary.toFixed(2)}/сек`,
+    desc: `Эфф. ${Math.round(efficiency * 100)}% · зарпл. x${salary.toFixed(2)}`,
   };
 }
 
 export function baseIncome(business: Business): number {
   let income = business.base;
-  income *= 1 + (business.tier - 1) * 1.5;
-  income *= 1 + business.optimizationLevel * 0.05;
+  income *= TIER_INCOME_MULTIPLIERS[business.tier - 1] ?? TIER_INCOME_MULTIPLIERS[TIER_INCOME_MULTIPLIERS.length - 1] ?? 1;
+  income *= 1 + optimizationBonus(business.optimizationLevel);
   return income;
 }
 
@@ -56,10 +76,14 @@ export function effectiveIncome(business: Business): number {
   if (!business.opened) return 0;
   const gross = baseIncome(business);
   if (!business.manager) return gross;
-  return Math.max(0, gross * business.manager.efficiency - business.manager.salary);
+  return Math.max(0, gross * business.manager.efficiency - managerSalary(business, business.manager));
 }
 
-export function tickBusinesses(businesses: Business[], dt: number): { businesses: Business[]; income: number } {
+export function managerSalary(business: Business, manager: Manager): number {
+  return business.minSalary * manager.salary;
+}
+
+export function tickBusinesses(businesses: Business[], dt: number): { businesses: Business[]; income: number; gems: number } {
   let income = 0;
   const next = businesses.map((business) => {
     const updated = { ...business };
@@ -69,17 +93,40 @@ export function tickBusinesses(businesses: Business[], dt: number): { businesses
       }
       return updated;
     }
-    if (!updated.maxed) updated.workedSeconds += dt;
+    if (!updated.maxed && updated.expansionRemaining <= 0) updated.workedSeconds += dt;
     if (updated.manager) income += effectiveIncome(updated) * dt;
     else if (!updated.collectReady) {
       updated.collectTimer = Math.min(COLLECT_TIME, updated.collectTimer + dt);
       updated.collectReady = updated.collectTimer >= COLLECT_TIME;
     }
 
+    if (updated.expansionRemaining > 0) {
+      updated.expansionRemaining = Math.max(0, updated.expansionRemaining - dt);
+      if (updated.expansionRemaining <= 0) {
+        const incomeBefore = effectiveIncome(updated);
+        const nextTier = updated.tier + 1;
+        updated.tier = nextTier;
+        updated.workedSeconds = 0;
+        updated.collectTimer = 0;
+        updated.collectReady = false;
+        updated.expansionDuration = 0;
+        updated.requirements = createExpansionRequirements(updated.id, updated.catIdx, nextTier, updated.base);
+        updated.maxed = nextTier >= 4;
+        updated.pendingExpansionReward = {
+          fromTier: nextTier - 1,
+          toTier: nextTier,
+          incomeBefore,
+          incomeAfter: effectiveIncome(updated),
+          gems: 1,
+        };
+      }
+      return updated;
+    }
+
     updated.requirements = updated.requirements.map((req) => tickRequirement(req, dt));
     return updated;
   });
-  return { businesses: next, income };
+  return { businesses: next, income, gems: 0 };
 }
 
 export function expansionConfig(business: Business) {
@@ -87,9 +134,17 @@ export function expansionConfig(business: Business) {
 }
 
 export function expansionProgress(business: Business) {
-  if (business.maxed) return { done: business.requirements.length, total: business.requirements.length, ready: false };
+  if (business.maxed || business.expansionRemaining > 0) return { done: business.requirements.length, total: business.requirements.length, ready: false };
   const done = business.requirements.filter((req) => isRequirementDone(business, req)).length;
   return { done, total: business.requirements.length, ready: done === business.requirements.length };
+}
+
+export function expansionDurationSeconds(business: Business): number {
+  const baseByTier = [12, 45, 120][business.tier - 1] ?? 180;
+  const levelMult = 1 + business.catIdx * 0.55;
+  const orderMult = 1 + (business.id % 4) * 0.18;
+  const incomeMult = 1 + business.base * 0.012;
+  return Math.round(baseByTier * levelMult * orderMult * incomeMult);
 }
 
 export function isRequirementDone(business: Business, req: ExpansionRequirement): boolean {
@@ -101,7 +156,7 @@ export function isRequirementDone(business: Business, req: ExpansionRequirement)
 export function createExpansionRequirements(businessId: number, catIdx: number, tier: number, baseIncomeValue: number): ExpansionRequirement[] {
   const config = EXPANSION_BALANCE[Math.min(tier - 1, EXPANSION_BALANCE.length - 1)];
   const businessOrder = businessId % 4;
-  const levelPressure = 1 + catIdx * 0.55 + businessOrder * 0.1 + (tier - 1) * 0.5 + baseIncomeValue * 0.015;
+  const levelPressure = 1 + catIdx * 0.9 + businessOrder * 0.22 + (tier - 1) * 0.82 + baseIncomeValue * 0.018;
   const difficulty = 1 + catIdx * 0.85 + businessOrder * 0.16 + (tier - 1) * 1.25 + baseIncomeValue * 0.012;
   const total = businessId < 4 && tier === 1 ? 2 : 2 + ((businessId + tier) % 3);
   const requirements: ExpansionRequirement[] = [
@@ -131,6 +186,14 @@ export function formatMoney(value: number): string {
 
 export function nextOptimizationCost(level: number): number | null {
   return level >= OPTIMIZATION_COSTS.length ? null : OPTIMIZATION_COSTS[level];
+}
+
+export function optimizationBonus(level: number): number {
+  return OPTIMIZATION_BONUSES.slice(0, level).reduce((sum, bonus) => sum + bonus, 0);
+}
+
+export function nextOptimizationBonus(level: number): number | null {
+  return level >= OPTIMIZATION_BONUSES.length ? null : OPTIMIZATION_BONUSES[level];
 }
 
 export function unlockDelaySeconds(levelIndex: number): number {

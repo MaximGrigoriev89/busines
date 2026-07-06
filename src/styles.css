@@ -37,17 +37,17 @@ button:disabled {
 }
 
 .top-bar {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(82px, 1fr) minmax(96px, 1fr) auto;
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
+  gap: 8px;
   padding: 14px 16px 12px;
   background: linear-gradient(180deg, #1a1f38, #111524);
   border-bottom: 1px solid #29304f;
 }
 
 .money-pill {
-  min-width: 96px;
+  min-width: 0;
   display: flex;
   align-items: center;
   gap: 7px;
@@ -69,17 +69,29 @@ button:disabled {
   color: #4ade80;
 }
 
-.app-title {
-  font-size: 16px;
-  font-weight: 900;
-  color: #facc15;
+.income-pill {
+  min-width: 0;
+  padding: 7px 10px;
+  border: 1px solid rgba(74, 222, 128, 0.35);
+  border-radius: 8px;
+  background: #10251c;
 }
 
-.income-line {
-  margin-top: 2px;
-  font-size: 12px;
-  font-weight: 800;
+.income-pill span {
+  display: block;
+  color: #86efac;
+  font-size: 10px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.income-pill strong {
+  display: block;
+  margin-top: 1px;
   color: #4ade80;
+  font-size: 13px;
+  font-weight: 900;
+  white-space: nowrap;
 }
 
 .goal-panel, .panel, .detail-panel {
@@ -145,7 +157,7 @@ button:disabled {
 }
 
 .manager-slot {
-  min-height: 76px;
+  min-height: 104px;
   border: 1px solid #283150;
   border-radius: 8px;
   background: #151a31;
@@ -154,7 +166,7 @@ button:disabled {
 
 .manager-bench {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 8px;
 }
 
@@ -263,6 +275,7 @@ button:disabled {
 }
 
 .tab {
+  position: relative;
   min-width: 0;
   min-height: 56px;
   display: grid;
@@ -306,6 +319,34 @@ button:disabled {
   color: #64748b;
 }
 
+.tier-notification {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  min-width: 18px;
+  height: 18px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.tier-notification.reward {
+  background: #16a34a;
+}
+
+.tier-notification.open {
+  background: #ca8a04;
+}
+
+.tier-notification.upgrade {
+  background: #2563eb;
+}
+
 .business-list {
   display: grid;
   gap: 10px;
@@ -316,7 +357,7 @@ button:disabled {
   position: relative;
   min-height: 112px;
   display: grid;
-  grid-template-columns: 58px minmax(0, 1fr) 78px;
+  grid-template-columns: 58px minmax(0, 1fr) 82px;
   align-items: center;
   gap: 12px;
   padding: 14px;
@@ -331,6 +372,7 @@ button:disabled {
 }
 
 .business-card.locked {
+  min-height: 92px;
   border-style: dashed;
   background: #101629;
 }
@@ -394,10 +436,45 @@ button:disabled {
 
 .business-card-meta {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 1fr);
   align-items: center;
   gap: 8px;
   margin-top: 8px;
+}
+
+.business-notifications {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 7px;
+}
+
+.business-notification {
+  padding: 3px 7px;
+  border: 1px solid;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 900;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.business-notification.reward {
+  color: #bbf7d0;
+  border-color: rgba(74, 222, 128, 0.62);
+  background: #11351f;
+}
+
+.business-notification.open {
+  color: #fef3c7;
+  border-color: rgba(250, 204, 21, 0.7);
+  background: #33280f;
+}
+
+.business-notification.upgrade {
+  color: #dbeafe;
+  border-color: rgba(96, 165, 250, 0.7);
+  background: #102542;
 }
 
 .business-card-meta span {
@@ -423,10 +500,13 @@ button:disabled {
   font-weight: 900;
 }
 
+.locked-business-line { margin-top: 6px; color: #94a3b8; font-size: 13px; font-weight: 900; }
+
 .business-card-side {
   position: relative;
   z-index: 2;
   min-width: 0;
+  width: 82px;
   display: grid;
   place-items: center;
   gap: 6px;
@@ -435,8 +515,8 @@ button:disabled {
 .business-card-open {
   position: relative;
   z-index: 3;
-  width: 30px;
-  height: 26px;
+  width: 72px;
+  height: 30px;
   display: grid;
   place-items: center;
   border: 1px solid #29304f;
@@ -451,7 +531,7 @@ button:disabled {
 }
 
 .business-open-action {
-  width: 72px;
+  width: 76px;
   min-height: 72px;
   display: grid;
   place-items: center;

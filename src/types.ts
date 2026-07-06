@@ -12,7 +12,7 @@ export interface Manager {
 export interface CategorySeed {
   name: string;
   icon: string;
-  biz: Array<{ n: string; ic: string; base: number }>;
+  biz: Array<{ n: string; ic: string; base: number; salary: number }>;
 }
 
 export interface EquipmentItem {
@@ -30,10 +30,38 @@ export interface LongActionItem {
   baseSeconds: number;
 }
 
+export interface AdMovieQuiz {
+  id: string;
+  title: string;
+  hints: string[];
+  options: string[];
+}
+
+export interface ActiveAd {
+  seconds: number;
+  quiz: AdMovieQuiz;
+  phase: "watching" | "quiz" | "result";
+  selectedAnswer: string | null;
+  correct: boolean | null;
+}
+
+export interface OfflineIncome {
+  seconds: number;
+  income: number;
+}
+
 export type ExpansionRequirement =
   | { id: string; type: "work"; requiredSeconds: number }
   | { id: string; type: "equipment"; equipmentId: string; quantity: number; owned: number; unitCost: number }
   | { id: string; type: "action"; actionId: string; cost: number; duration: number; remaining: number; done: boolean };
+
+export interface ExpansionReward {
+  fromTier: number;
+  toTier: number;
+  incomeBefore: number;
+  incomeAfter: number;
+  gems: number;
+}
 
 export interface Business {
   id: number;
@@ -41,6 +69,7 @@ export interface Business {
   icon: string;
   catIdx: number;
   base: number;
+  minSalary: number;
   tier: number;
   opened: boolean;
   openCost: number;
@@ -50,6 +79,9 @@ export interface Business {
   collectReady: boolean;
   workedSeconds: number;
   requirements: ExpansionRequirement[];
+  expansionRemaining: number;
+  expansionDuration: number;
   optimizationLevel: number;
+  pendingExpansionReward: ExpansionReward | null;
   maxed: boolean;
 }

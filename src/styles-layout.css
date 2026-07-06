@@ -14,11 +14,16 @@
 .top-actions {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
 }
 
 .top-actions .money-pill {
-  min-width: 86px;
+  min-width: 54px;
+  justify-content: center;
+}
+
+.top-actions .gem-pill {
+  padding-inline: 8px;
 }
 
 .reset-button {
@@ -32,6 +37,25 @@
   color: #cbd5e1;
 }
 
+.gem-ad-button {
+  min-width: 94px;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  border: 1px solid #2563eb;
+  border-radius: 8px;
+  background: #10253d;
+  color: #dbeafe;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.gem-ad-button span {
+  color: #facc15;
+}
+
 .reset-button:active {
   transform: translateY(1px);
 }
@@ -42,6 +66,57 @@
   border-radius: 8px;
   background: linear-gradient(180deg, #151d35, #101728);
   box-shadow: inset 0 0 0 1px rgba(250, 204, 21, 0.04);
+}
+
+.goal-panel.complete {
+  border-color: rgba(74, 222, 128, 0.45);
+  background: #10251c;
+}
+
+.goal-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+}
+
+.goal-claim {
+  min-width: 94px;
+  min-height: 34px;
+  padding: 7px 10px;
+  border: 1px solid #3a456b;
+  border-radius: 8px;
+  background: #151a31;
+  color: #94a3b8;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.goal-claim.ready {
+  border-color: #facc15;
+  background: #352b12;
+  color: #fef3c7;
+  animation: goalReadyPulse 0.9s ease-in-out infinite;
+}
+
+.goal-caption {
+  margin-top: 6px;
+  color: #94a3b8;
+  font-size: 11px;
+  font-weight: 900;
+  text-align: right;
+}
+
+.tab.locked {
+  color: #64748b;
+  border-color: #252d49;
+  background: #101628;
+  opacity: 0.72;
+}
+
+.tab.opening {
+  border-color: #facc15;
+  animation: goalReadyPulse 0.9s ease-in-out infinite;
 }
 
 .content-scroll {
@@ -58,6 +133,103 @@
   border-bottom: 1px solid #2b3657;
   border-radius: 8px;
   background: #10182c;
+}
+
+.premium-slot {
+  border-color: rgba(250, 204, 21, 0.6);
+  background: #1d1a2c;
+}
+
+.premium-manager-card {
+  background: linear-gradient(135deg, rgba(250, 204, 21, 0.12), rgba(56, 189, 248, 0.08));
+}
+
+.compact-manager-card {
+  width: 100%;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 4px;
+  color: #e2e8f0;
+  text-align: center;
+}
+
+.compact-manager-card strong {
+  color: #dbeafe;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.compact-manager-card small {
+  color: #94a3b8;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.manager-card-action {
+  flex: 0 0 auto;
+  min-width: 58px;
+  display: grid;
+  place-items: center;
+  gap: 2px;
+  padding: 6px 8px;
+  border: 1px solid rgba(250, 204, 21, 0.55);
+  border-radius: 8px;
+  background: #33280f;
+  color: #fef3c7;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.manager-card-action:disabled {
+  border-color: #29304f;
+  background: #101628;
+  color: #64748b;
+}
+
+.premium-note {
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  margin-top: 12px;
+  color: #fef3c7;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.premium-manager-button {
+  width: 100%;
+  min-height: 42px;
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  padding: 9px 11px;
+  border: 1px solid #38bdf8;
+  border-radius: 8px;
+  background: #10253d;
+  color: #dbeafe;
+  text-align: left;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.premium-manager-button small {
+  color: #facc15;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.premium-manager-button:disabled {
+  border-color: #29304f;
+  background: #101628;
+}
+
+.modal-premium {
+  margin-top: 12px;
 }
 
 .business-list-panel {
