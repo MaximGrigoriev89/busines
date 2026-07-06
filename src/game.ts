@@ -103,22 +103,7 @@ export function tickBusinesses(businesses: Business[], dt: number): { businesses
     if (updated.expansionRemaining > 0) {
       updated.expansionRemaining = Math.max(0, updated.expansionRemaining - dt);
       if (updated.expansionRemaining <= 0) {
-        const incomeBefore = effectiveIncome(updated);
-        const nextTier = updated.tier + 1;
-        updated.tier = nextTier;
-        updated.workedSeconds = 0;
-        updated.collectTimer = 0;
-        updated.collectReady = false;
-        updated.expansionDuration = 0;
-        updated.requirements = createExpansionRequirements(updated.id, updated.catIdx, nextTier, updated.base);
-        updated.maxed = nextTier >= 4;
-        updated.pendingExpansionReward = {
-          fromTier: nextTier - 1,
-          toTier: nextTier,
-          incomeBefore,
-          incomeAfter: effectiveIncome(updated),
-          gems: 1,
-        };
+        return completeExpansion(updated);
       }
       return updated;
     }
@@ -127,6 +112,35 @@ export function tickBusinesses(businesses: Business[], dt: number): { businesses
     return updated;
   });
   return { businesses: next, income, gems: 0 };
+}
+
+export function completeExpansion(business: Business): Business {
+  if (business.maxed || business.tier >= 4) {
+    return { ...business, expansionRemaining: 0, expansionDuration: 0 };
+  }
+  const incomeBefore = effectiveIncome(business);
+  const nextTier = business.tier + 1;
+  const updated = {
+    ...business,
+    tier: nextTier,
+    workedSeconds: 0,
+    collectTimer: 0,
+    collectReady: false,
+    expansionRemaining: 0,
+    expansionDuration: 0,
+    requirements: createExpansionRequirements(business.id, business.catIdx, nextTier, business.base),
+    maxed: nextTier >= 4,
+  };
+  return {
+    ...updated,
+    pendingExpansionReward: {
+      fromTier: nextTier - 1,
+      toTier: nextTier,
+      incomeBefore,
+      incomeAfter: effectiveIncome(updated),
+      gems: 1,
+    },
+  };
 }
 
 export function expansionConfig(business: Business) {

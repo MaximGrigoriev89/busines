@@ -13,6 +13,7 @@ interface DetailPanelProps {
   onBuyEquipment: (id: number, requirementId: string, equipmentId: string) => void;
   onStartAction: (id: number, requirementId: string) => void;
   onExpand: (id: number) => void;
+  onSkipExpansion: (id: number) => void;
   onClaimExpansionReward: (id: number, reward: ExpansionReward) => void;
   onOptimize: (id: number) => void;
   onOptimizeAd: (id: number) => void;
@@ -22,7 +23,7 @@ interface DetailPanelProps {
 }
 
 export function DetailPanel(props: DetailPanelProps) {
-  const { business, soft, hard, onBack, onBuyEquipment, onStartAction, onExpand, onClaimExpansionReward, onOptimize, onOptimizeAd, onOpenAssign, onRemoveManager } = props;
+  const { business, soft, hard, onBack, onBuyEquipment, onStartAction, onExpand, onSkipExpansion, onClaimExpansionReward, onOptimize, onOptimizeAd, onOpenAssign, onRemoveManager } = props;
   const [equipmentReqId, setEquipmentReqId] = useState<string | null>(null);
   const [managerInfoOpen, setManagerInfoOpen] = useState(false);
   const [rewardPopup, setRewardPopup] = useState<(ExpansionReward & { businessName: string }) | null>(null);
@@ -76,7 +77,7 @@ export function DetailPanel(props: DetailPanelProps) {
               />
             ))}
           </div>
-          <UpgradeAction business={business} progressReady={progress.ready} tierGain={tierGain} onExpand={onExpand} />
+          <UpgradeAction business={business} progressReady={progress.ready} tierGain={tierGain} onExpand={onExpand} onSkipExpansion={onSkipExpansion} />
           {equipmentReq && (
             <EquipmentPicker
               business={business}
@@ -195,7 +196,7 @@ function UpgradeRewardModal({ reward, onClose }: { reward: ExpansionReward & { b
   );
 }
 
-function UpgradeAction({ business, progressReady, tierGain, onExpand }: { business: Business; progressReady: boolean; tierGain: number; onExpand: (id: number) => void }) {
+function UpgradeAction({ business, progressReady, tierGain, onExpand, onSkipExpansion }: { business: Business; progressReady: boolean; tierGain: number; onExpand: (id: number) => void; onSkipExpansion: (id: number) => void }) {
   const active = business.expansionRemaining > 0;
   const buildPct = active && business.expansionDuration > 0 ? 100 - (business.expansionRemaining / business.expansionDuration) * 100 : 0;
   const buttonText = active
@@ -212,6 +213,11 @@ function UpgradeAction({ business, progressReady, tierGain, onExpand }: { busine
       <button className="primary-button expand" disabled={!progressReady || active} onClick={() => onExpand(business.id)}>
         <Layers size={18} /> {buttonText}
       </button>
+      {active && (
+        <button className="primary-button ad" onClick={() => onSkipExpansion(business.id)}>
+          <Tv size={18} /> Пропустить за рекламу
+        </button>
+      )}
     </div>
   );
 }

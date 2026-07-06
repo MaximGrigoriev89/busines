@@ -6,7 +6,7 @@ import { AdModal, LevelUnlockModal, ManagerModal, OfflineIncomeModal, VictoryMod
 import { Managers } from "./components/Managers";
 import { Tabs } from "./components/Tabs";
 import { AD_DURATION_SECONDS, AD_MOVIE_QUIZZES, AD_QUIZ_BONUS, CATEGORIES, CATEGORY_UNLOCK_GOALS, COLLECT_TIME, GEM_AD_REWARD, MANAGER_COOLDOWN_SECONDS, OPTIMIZATION_COSTS, PREMIUM_MANAGER_COST } from "./data";
-import { createBusinesses, createManager, createPremiumManager, effectiveIncome, expansionDurationSeconds, expansionProgress, nextBusinessOpenCost, nextOptimizationCost, tickBusinesses, unlockDelaySeconds } from "./game";
+import { completeExpansion, createBusinesses, createManager, createPremiumManager, effectiveIncome, expansionDurationSeconds, expansionProgress, nextBusinessOpenCost, nextOptimizationCost, tickBusinesses, unlockDelaySeconds } from "./game";
 import { advanceOffline, clearProgress, loadProgress, saveProgress, type GameSnapshot } from "./save";
 import type { ActiveAd, Business, ExpansionReward, Manager, OfflineIncome } from "./types";
 
@@ -357,6 +357,14 @@ export function App() {
     }));
   }
 
+  function handleSkipExpansion(id: number) {
+    const business = businesses.find((item) => item.id === id);
+    if (!business?.opened || business.expansionRemaining <= 0) return;
+    runAd(() => updateBusiness(id, (item) => (
+      item.expansionRemaining > 0 ? completeExpansion(item) : item
+    )));
+  }
+
   function handleClaimExpansionReward(id: number, reward: ExpansionReward) {
     const key = `${id}:${reward.fromTier}:${reward.toTier}`;
     if (claimedExpansionRewards.current.has(key)) return;
@@ -425,7 +433,7 @@ export function App() {
       <div className="content-scroll">
         <div className={`screen-transition ${businessPageOpen ? "detail-screen-transition" : "main-screen-transition"}`} key={screenKey}>
           {businessPageOpen ? (
-            <DetailPanel business={selectedBusiness} soft={soft} hard={hard} onBack={() => setBusinessPageOpen(false)} onBuyEquipment={handleBuyEquipment} onStartAction={handleStartAction} onExpand={handleExpand} onClaimExpansionReward={handleClaimExpansionReward} onOptimize={handleOptimizeBusiness} onOptimizeAd={handleOptimizeBusinessAd} onOpenAssign={setAssignBusinessId} onRemoveManager={(id) => updateBusiness(id, (item) => ({ ...item, manager: null }))} />
+            <DetailPanel business={selectedBusiness} soft={soft} hard={hard} onBack={() => setBusinessPageOpen(false)} onBuyEquipment={handleBuyEquipment} onStartAction={handleStartAction} onExpand={handleExpand} onSkipExpansion={handleSkipExpansion} onClaimExpansionReward={handleClaimExpansionReward} onOptimize={handleOptimizeBusiness} onOptimizeAd={handleOptimizeBusinessAd} onOpenAssign={setAssignBusinessId} onRemoveManager={(id) => updateBusiness(id, (item) => ({ ...item, manager: null }))} />
           ) : (
             <div className="main-sections">
               <Managers managers={managers} premiumManager={premiumPreview} managerCooldown={managerCooldown} onSearch={handleSearchManager} onFire={(slot) => setManagers((current) => current.map((item, idx) => (idx === slot ? null : item)))} />
