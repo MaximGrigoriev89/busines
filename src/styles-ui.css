@@ -30,14 +30,6 @@
   line-height: 1.1;
 }
 
-.manager-badge .icon-quiet {
-  position: absolute;
-  right: -7px;
-  top: -7px;
-  width: 24px;
-  height: 24px;
-}
-
 .manager-frame {
   width: 72px;
   min-height: 72px;
@@ -497,4 +489,11 @@
   color: #94a3b8;
   font-size: 15px;
   line-height: 1.45;
+}
+
+.victory-code {
+  color: #facc15;
+  font-size: clamp(96px, 24vw, 180px);
+  font-weight: 1000;
+  line-height: 0.85;
 }

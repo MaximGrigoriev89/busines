@@ -40,16 +40,42 @@ export function TopBar({ soft, hard, totalAuto, onGemAd, onReset }: TopBarProps)
 
 interface GoalBarProps {
   soft: number;
-  goal: { targetCategory: number; cost: number } | null;
+  goal: MainGoal | null;
   opening: boolean;
   onClaim: () => void;
 }
+
+export type MainGoal =
+  | { kind: "money"; targetCategory: number; cost: number }
+  | { kind: "final"; done: number; total: number; ready: boolean };
 
 export function GoalBar({ soft, goal, opening, onClaim }: GoalBarProps) {
   if (!goal) {
     return (
       <section className="goal-panel complete">
-        <div className="section-title"><Goal size={17} /> Все уровни бизнеса открыты</div>
+        <div className="section-title"><Goal size={17} /> Игра пройдена</div>
+      </section>
+    );
+  }
+  if (goal.kind === "final") {
+    const progress = goal.total > 0 ? Math.min(100, (goal.done / goal.total) * 100) : 0;
+    return (
+      <section className="goal-panel">
+        <div className="goal-row">
+          <div className="section-title">
+            <Goal size={17} />
+            Прокачай все бизнесы и оптимизируй их на максимум
+          </div>
+          {goal.ready && (
+            <button className="goal-claim ready" onClick={onClaim}>
+              Выполнить
+            </button>
+          )}
+        </div>
+        <div className="progress-track tall">
+          <div className="goal-fill" style={{ width: `${progress}%` }} />
+        </div>
+        <div className="goal-caption">{goal.done} / {goal.total}</div>
       </section>
     );
   }

@@ -140,11 +140,7 @@ export function expansionProgress(business: Business) {
 }
 
 export function expansionDurationSeconds(business: Business): number {
-  const baseByTier = [18, 90, 240][business.tier - 1] ?? 300;
-  const levelMult = 1 + business.catIdx * 0.55;
-  const orderMult = 1 + (business.id % 4) * 0.18;
-  const incomeMult = 1 + business.base * 0.012;
-  return Math.round(baseByTier * levelMult * orderMult * incomeMult);
+  return 5 * 60 * business.tier * (business.catIdx + 1);
 }
 
 export function isRequirementDone(business: Business, req: ExpansionRequirement): boolean {

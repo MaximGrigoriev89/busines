@@ -153,8 +153,10 @@ export function VictoryModal({ open, onClose }: { open: boolean; onClose: () => 
     <div className="modal-overlay">
       <div className="modal-box victory">
         <div className="text-6xl">🏆</div>
-        <h2>Цель выполнена!</h2>
-        <p>Все уровни бизнесов открыты. Можно продолжать расширять бизнесы, оптимизировать доход и тестировать менеджеров.</p>
+        <h2>Игра пройдена!</h2>
+        <p>Напиши в тред по игре только</p>
+        <div className="victory-code">67</div>
+        <p>Так ты подтвердишь что прошёл её</p>
         <button className="primary-button expand" onClick={onClose}>Продолжить</button>
       </div>
     </div>

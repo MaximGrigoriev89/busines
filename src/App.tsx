@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { BusinessList } from "./components/BusinessList";
-import { GoalBar, TopBar } from "./components/Bars";
+import { GoalBar, TopBar, type MainGoal } from "./components/Bars";
 import { DetailPanel } from "./components/DetailPanel";
 import { AdModal, LevelUnlockModal, ManagerModal, OfflineIncomeModal, VictoryModal } from "./components/Modals";
 import { Managers } from "./components/Managers";
 import { Tabs } from "./components/Tabs";
-import { AD_DURATION_SECONDS, AD_MOVIE_QUIZZES, AD_QUIZ_BONUS, CATEGORIES, CATEGORY_UNLOCK_GOALS, COLLECT_TIME, GEM_AD_REWARD, MANAGER_COOLDOWN_SECONDS, PREMIUM_MANAGER_COST } from "./data";
+import { AD_DURATION_SECONDS, AD_MOVIE_QUIZZES, AD_QUIZ_BONUS, CATEGORIES, CATEGORY_UNLOCK_GOALS, COLLECT_TIME, GEM_AD_REWARD, MANAGER_COOLDOWN_SECONDS, OPTIMIZATION_COSTS, PREMIUM_MANAGER_COST } from "./data";
 import { createBusinesses, createManager, createPremiumManager, effectiveIncome, expansionDurationSeconds, expansionProgress, nextBusinessOpenCost, nextOptimizationCost, tickBusinesses, unlockDelaySeconds } from "./game";
 import { advanceOffline, clearProgress, loadProgress, saveProgress, type GameSnapshot } from "./save";
 import type { ActiveAd, Business, ExpansionReward, Manager, OfflineIncome } from "./types";
@@ -32,7 +32,7 @@ export function App() {
   const [managerCooldown, setManagerCooldown] = useState(initialProgress.snapshot.managerCooldown);
   const [assignBusinessId, setAssignBusinessId] = useState<number | null>(null);
   const [activeAd, setActiveAd] = useState<ActiveAd | null>(null);
-  const [victoryShown, setVictoryShown] = useState(initialProgress.snapshot.victoryShown);
+  const [victoryShown, setVictoryShown] = useState(initialProgress.snapshot.victoryShown && finalQuestProgress(initialProgress.snapshot.businesses).ready);
   const [victoryOpen, setVictoryOpen] = useState(false);
   const [offlineIncome, setOfflineIncome] = useState<OfflineIncome | null>(initialProgress.offline);
   const [incomeBursts, setIncomeBursts] = useState<IncomeBurst[]>([]);
@@ -53,10 +53,12 @@ export function App() {
     [businesses],
   );
   const premiumPreview = useMemo(() => createPremiumManager(managerSeed), [managerSeed]);
-  const currentGoal = useMemo(
-    () => CATEGORY_UNLOCK_GOALS.find((goal) => goal.targetCategory === unlockedCategory + 1) ?? null,
-    [unlockedCategory],
-  );
+  const finalGoalProgress = useMemo(() => finalQuestProgress(businesses), [businesses]);
+  const currentGoal = useMemo<MainGoal | null>(() => {
+    const unlockGoal = CATEGORY_UNLOCK_GOALS.find((goal) => goal.targetCategory === unlockedCategory + 1);
+    if (unlockGoal) return { ...unlockGoal, kind: "money" };
+    return victoryShown ? null : { kind: "final", ...finalGoalProgress };
+  }, [finalGoalProgress, unlockedCategory, victoryShown]);
 
   snapshotRef.current = { soft, hard, businesses, activeCategory, unlockedCategory, selectedId, businessPageOpen, managers, managerSeed, managerCooldown, victoryShown };
 
@@ -252,7 +254,14 @@ export function App() {
   }
 
   function handleClaimGoal() {
-    if (!currentGoal || soft < currentGoal.cost || unlockingCategory != null) return;
+    if (!currentGoal) return;
+    if (currentGoal.kind === "final") {
+      if (!currentGoal.ready || victoryShown) return;
+      setVictoryShown(true);
+      setVictoryOpen(true);
+      return;
+    }
+    if (soft < currentGoal.cost || unlockingCategory != null) return;
     const targetCategory = currentGoal.targetCategory;
     const firstBusinessId = businesses.find((item) => item.catIdx === targetCategory)?.id ?? null;
     setSoft((value) => value - currentGoal.cost);
@@ -268,10 +277,6 @@ export function App() {
       setActiveCategory(targetCategory);
       setSelectedId(firstBusinessId);
       setUnlockingCategory(null);
-      if (!victoryShown && targetCategory >= CATEGORIES.length - 1) {
-        setVictoryShown(true);
-        setVictoryOpen(true);
-      }
       unlockTimer.current = null;
     }, 1300);
   }
@@ -451,4 +456,15 @@ export function App() {
       <VictoryModal open={victoryOpen} onClose={() => setVictoryOpen(false)} />
     </main>
   );
+}
+
+function finalQuestProgress(businesses: Business[]) {
+  const maxOptimization = OPTIMIZATION_COSTS.length;
+  const done = businesses.reduce((sum, business) => (
+    sum
+    + (business.opened && business.tier >= 4 ? 1 : 0)
+    + (business.opened && business.optimizationLevel >= maxOptimization ? 1 : 0)
+  ), 0);
+  const total = businesses.length * 2;
+  return { done, total, ready: total > 0 && done === total };
 }
