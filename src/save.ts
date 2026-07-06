@@ -4,6 +4,7 @@ import type { Business, Manager, OfflineIncome } from "./types";
 
 const SAVE_KEY = "business-empire-save-v2";
 const OFFLINE_THRESHOLD_SECONDS = 10;
+const OFFLINE_INCOME_MULTIPLIER = 0.2;
 
 export interface GameSnapshot {
   soft: number;
@@ -54,15 +55,16 @@ export function loadProgress(now = Date.now()): { snapshot: GameSnapshot; offlin
 
 export function advanceOffline(snapshot: GameSnapshot, seconds: number): { snapshot: GameSnapshot; income: number } {
   const result = tickBusinesses(snapshot.businesses, seconds);
+  const income = result.income * OFFLINE_INCOME_MULTIPLIER;
   return {
     snapshot: {
       ...snapshot,
-      soft: snapshot.soft + result.income,
+      soft: snapshot.soft + income,
       hard: snapshot.hard + result.gems,
       businesses: result.businesses,
       managerCooldown: Math.max(0, snapshot.managerCooldown - seconds),
     },
-    income: result.income,
+    income,
   };
 }
 

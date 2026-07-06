@@ -1,4 +1,4 @@
-import { Building2, Check, Clock, Info, Lock, Tv, UserPlus } from "lucide-react";
+import { Building2, Clock, Info, Lock, Tv, UserPlus } from "lucide-react";
 import { COLLECT_TIME, OPTIMIZATION_COSTS, RARITY_CLASS, RARITY_NAME } from "../data";
 import { effectiveIncome, formatMoney, optimizationBonus } from "../game";
 import { businessNotifications } from "../notifications";
@@ -81,7 +81,7 @@ function StarProgressRow({ label, businesses, max, value }: { label: string; bus
 }
 
 function BusinessCard(props: BusinessListProps & { business: Business }) {
-  const { business, soft, hasFreeManager, hasStoredManager, incomeBursts, onSelect, onCollect, onOpenAssign, onRemoveManager, onOpenBusiness, onSkipUnlock } = props;
+  const { business, soft, hasFreeManager, hasStoredManager, incomeBursts, onSelect, onCollect, onOpenAssign, onOpenBusiness, onSkipUnlock } = props;
   if (!business.opened) {
     return <LockedBusinessCard business={business} soft={soft} onOpenBusiness={onOpenBusiness} onSkipUnlock={onSkipUnlock} />;
   }
@@ -119,7 +119,7 @@ function BusinessCard(props: BusinessListProps & { business: Business }) {
       </div>
       <div className="business-card-side">
         {business.manager ? (
-          <ManagerBadge manager={business.manager} onRemove={() => onRemoveManager(business.id)} />
+          <ManagerBadge manager={business.manager} />
         ) : (
           <ManagerFrame isCollectable={readyToCollect} hasStoredManager={hasStoredManager} onOpenAssign={() => onOpenAssign(business.id)} />
         )}
@@ -216,16 +216,13 @@ function ManagerFrame({ isCollectable, hasStoredManager, onOpenAssign }: { isCol
   );
 }
 
-function ManagerBadge({ manager, onRemove }: { manager: Manager; onRemove: () => void }) {
+function ManagerBadge({ manager }: { manager: Manager }) {
   return (
     <div className="manager-badge">
       <div className={`portrait sm ${RARITY_CLASS[manager.rarity]}`}>{manager.face}</div>
       <div className="manager-badge-text">
         <div className="truncate text-sm font-black">{RARITY_NAME[manager.rarity]}</div>
       </div>
-      <button className="icon-quiet" onClick={(event) => { event.stopPropagation(); onRemove(); }} title="Убрать менеджера">
-        <Check size={15} />
-      </button>
     </div>
   );
 }
