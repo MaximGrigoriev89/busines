@@ -61,9 +61,8 @@ export function DetailPanel(props: DetailPanelProps) {
     <section className="detail-panel business-page">
       <div className="business-page-head">
         <button className="back-button" onClick={onBack}><ArrowLeft size={18} /> Назад</button>
-        <div className="level-badge"><BusinessLevelStars level={business.tier} /></div>
       </div>
-      <DetailBlock title="Бизнес" meta={`$${income.toFixed(2)}/сек`}>
+      <DetailBlock title="Бизнес" meta={`$${income.toFixed(2)}/сек`} hideHeader>
         <BusinessShowcase business={business} income={income} />
         <BusinessInfo business={business} onHire={() => onOpenAssign(business.id)} onInfo={() => setManagerInfoOpen(true)} />
       </DetailBlock>
@@ -123,11 +122,12 @@ function BusinessShowcase({ business, income }: { business: Business; income: nu
       <div className="vehicle-hero business-placeholder-hero">
         <div className="vehicle-hero-glow" />
         <img className="vehicle-stage-art business-placeholder-art" src={art} alt={`${business.name}: ${visual.label}`} />
-        <div className="vehicle-hero-mark">{business.icon}</div>
-        <div className="vehicle-hero-state">{visual.label}</div>
       </div>
       <div className="vehicle-showcase-copy">
-        <h2>{business.name}</h2>
+        <div className="business-title-row">
+          <h2>{business.name}</h2>
+          <BusinessLevelStars level={business.tier} compact />
+        </div>
         <div className="business-summary-text">
           {business.mergedIntoHolding ? "В составе холдинга" : business.manager ? "Авто сбор" : "Ручной сбор"} · доход ${income.toFixed(2)}/сек
         </div>
@@ -136,15 +136,17 @@ function BusinessShowcase({ business, income }: { business: Business; income: nu
   );
 }
 
-function DetailBlock({ title, meta, children, className = "" }: { title: string; meta: string; children: ReactNode; className?: string }) {
+function DetailBlock({ title, meta, children, className = "", hideHeader = false }: { title: string; meta: string; children: ReactNode; className?: string; hideHeader?: boolean }) {
   return (
     <section className={`detail-block ${className}`.trim()}>
-      <div className="detail-block-head">
-        <div>
-          <strong>{title}</strong>
+      {!hideHeader && (
+        <div className="detail-block-head">
+          <div>
+            <strong>{title}</strong>
+          </div>
+          <em>{meta}</em>
         </div>
-        <em>{meta}</em>
-      </div>
+      )}
       <div className="detail-block-body">{children}</div>
     </section>
   );
