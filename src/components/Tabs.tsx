@@ -1,5 +1,6 @@
 import { LockKeyhole } from "lucide-react";
 import { CATEGORIES } from "../data";
+import { isHoldingCategory, isHoldingCategoryAvailable } from "../game";
 import { categoryNotificationSummary } from "../notifications";
 import type { Business } from "../types";
 
@@ -16,7 +17,7 @@ export function Tabs({ active, unlocked, openingCategory, businesses, soft, onCh
   return (
     <nav className="tabs level-tabs" aria-label="Категории бизнесов">
       {CATEGORIES.map((category, index) => {
-        const locked = index > unlocked;
+        const locked = index > unlocked && !(isHoldingCategory(index) && isHoldingCategoryAvailable(businesses));
         const opening = index === openingCategory;
         const notification = categoryNotificationSummary(businesses, index, soft);
         return (

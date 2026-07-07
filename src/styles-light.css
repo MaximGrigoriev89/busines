@@ -68,6 +68,7 @@ button {
 
 .money-pill,
 .top-actions .money-pill,
+.ad-counter-pill,
 .reset-button,
 .gem-ad-button,
 .goal-claim,
@@ -90,6 +91,10 @@ button {
 .coin {
   background: var(--green-soft);
   color: var(--green);
+}
+
+.ad-counter-pill svg {
+  color: var(--cyan);
 }
 
 .income-pill {
@@ -694,6 +699,13 @@ button {
 
 .primary-button.ad {
   background: linear-gradient(135deg, #fb923c, #ea580c);
+}
+
+.manager-roll-modal .manager-reroll-ad {
+  border: 1px solid #fed7aa;
+  color: #7c2d12;
+  background: #fff7ed;
+  box-shadow: none;
 }
 
 .primary-button.danger,

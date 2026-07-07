@@ -4,12 +4,12 @@ import { GoalBar, TopBar, type MainGoal } from "./components/Bars";
 import { DetailPanel } from "./components/DetailPanel";
 import { HoldingMergeOverlay, type HoldingMergeAnimation } from "./components/HoldingMergeOverlay";
 import { MergerPanel } from "./components/MergerPanel";
-import { AdModal, LevelUnlockModal, ManagerModal, OfflineIncomeModal, VictoryModal } from "./components/Modals";
+import { AdModal, AdStatsModal, LevelUnlockModal, ManagerModal, OfflineIncomeModal, VictoryModal } from "./components/Modals";
 import { Tabs } from "./components/Tabs";
-import { AD_DURATION_SECONDS, AD_MOVIE_QUIZZES, AD_QUIZ_BONUS, CATEGORIES, CATEGORY_UNLOCK_GOALS, COLLECT_TIME, GEM_AD_REWARD, MANAGER_COOLDOWN_SECONDS, MAX_BUSINESS_TIER, OPTIMIZATION_COSTS, PREMIUM_MANAGER_COST } from "./data";
-import { categoryMergerStatus, completeExpansion, createBusinesses, createManager, createPremiumManager, effectiveIncome, expansionDurationSeconds, expansionProgress, nextBusinessOpenCost, nextOptimizationCost, tickBusinesses, totalAutoIncomePerSecond, unlockDelaySeconds } from "./game";
-import { advanceOffline, clearProgress, loadProgress, saveProgress, type GameSnapshot } from "./save";
-import type { ActiveAd, Business, ExpansionReward, Manager, OfflineIncome } from "./types";
+import { AD_DURATION_SECONDS, AD_MOVIE_QUIZZES, AD_QUIZ_BONUS, CATEGORIES, CATEGORY_UNLOCK_GOALS, COLLECT_TIME, FINAL_CORPORATION_NAME, GEM_AD_REWARD, holdingBusinessNameForCategory, MANAGER_AD_REROLL_ATTEMPTS, MANAGER_ROLL_MAX_ATTEMPTS, MANAGER_SEARCH_SECONDS, MAX_BUSINESS_TIER, OPTIMIZATION_COSTS, PREMIUM_MANAGER_COST } from "./data";
+import { categoryMergerStatus, completeExpansion, createBusinesses, createManager, createPremiumManager, effectiveIncome, expansionDurationSeconds, expansionProgress, holdingCategoryIndex, isHoldingCategory, isHoldingCategoryAvailable, nextBusinessOpenCost, nextOptimizationCost, syncHoldingCategoryBusinesses, tickBusinesses, totalAutoIncomePerSecond, unlockDelaySeconds } from "./game";
+import { advanceOffline, advanceRecruitment, clearProgress, createDefaultAdStats, createDefaultRecruitment, loadProgress, OFFLINE_THRESHOLD_SECONDS, saveProgress, type GameSnapshot } from "./save";
+import type { ActiveAd, AdSource, Business, ExpansionReward, OfflineIncome } from "./types";
 
 interface IncomeBurst {
   id: number;
@@ -25,6 +25,7 @@ const GEM_CHEAT_REWARD = 50;
 const CHEAT_BUFFER_LENGTH = Math.max(MONEY_CHEAT_CODE.length, GEM_CHEAT_CODE.length, HOLDING_CHEAT_CODE.length);
 const CHEAT_TIME_MULTIPLIER = 10;
 const CHEAT_DURATION_SECONDS = 60;
+const MANAGER_SEARCH_PREVIEW_CHANGES_PER_SECOND = 4;
 
 function getCheatKey(event: KeyboardEvent): string | null {
   const key = event.key.toUpperCase();
@@ -77,6 +78,10 @@ function prepareCategoryForMerger(businesses: Business[], categoryIndex: number)
   ));
 }
 
+function canOpenCategoryTab(categoryIndex: number, unlockedCategory: number, businesses: Business[]): boolean {
+  return categoryIndex <= unlockedCategory || (isHoldingCategory(categoryIndex) && isHoldingCategoryAvailable(businesses));
+}
+
 export function App() {
   const initialProgress = useMemo(() => loadProgress(), []);
   const [soft, setSoft] = useState(initialProgress.snapshot.soft);
@@ -88,9 +93,11 @@ export function App() {
   const [levelUnlockCategory, setLevelUnlockCategory] = useState<number | null>(null);
   const [selectedId, setSelectedId] = useState<number | null>(initialProgress.snapshot.selectedId);
   const [businessPageOpen, setBusinessPageOpen] = useState(initialProgress.snapshot.businessPageOpen);
-  const [managers, setManagers] = useState<Array<Manager | null>>(initialProgress.snapshot.managers);
+  const [managerRecruitment, setManagerRecruitment] = useState(initialProgress.snapshot.managerRecruitment);
   const [managerSeed, setManagerSeed] = useState(initialProgress.snapshot.managerSeed);
-  const [managerCooldown, setManagerCooldown] = useState(initialProgress.snapshot.managerCooldown);
+  const [adWatchedCount, setAdWatchedCount] = useState(initialProgress.snapshot.adWatchedCount);
+  const [adStats, setAdStats] = useState(initialProgress.snapshot.adStats);
+  const [adStatsOpen, setAdStatsOpen] = useState(false);
   const [assignBusinessId, setAssignBusinessId] = useState<number | null>(null);
   const [activeAd, setActiveAd] = useState<ActiveAd | null>(null);
   const [victoryShown, setVictoryShown] = useState(initialProgress.snapshot.victoryShown && finalQuestProgress(initialProgress.snapshot.businesses).ready);
@@ -105,6 +112,7 @@ export function App() {
   const adReward = useRef<(() => void) | null>(null);
   const unlockTimer = useRef<number | null>(null);
   const cheatBuffer = useRef("");
+  const managerSeedRef = useRef(initialProgress.snapshot.managerSeed);
   const timeWarpRemainingRef = useRef(0);
   const lastTickAt = useRef(performance.now());
   const pausedRef = useRef(false);
@@ -115,6 +123,11 @@ export function App() {
   const selectedBusiness = businesses.find((item) => item.id === selectedId) ?? null;
   const totalAuto = useMemo(() => totalAutoIncomePerSecond(businesses), [businesses]);
   const premiumPreview = useMemo(() => createPremiumManager(managerSeed), [managerSeed]);
+  const rouletteManager = useMemo(() => (
+    managerRecruitment.searchRemaining > 0
+      ? createManager(managerSeed + Math.floor(managerRecruitment.searchRemaining * MANAGER_SEARCH_PREVIEW_CHANGES_PER_SECOND) + 1_000)
+      : null
+  ), [managerRecruitment.searchRemaining, managerSeed]);
   const finalGoalProgress = useMemo(() => finalQuestProgress(businesses), [businesses]);
   const currentGoal = useMemo<MainGoal | null>(() => {
     const unlockGoal = CATEGORY_UNLOCK_GOALS.find((goal) => goal.targetCategory === unlockedCategory + 1);
@@ -122,7 +135,7 @@ export function App() {
     return victoryShown ? null : { kind: "final", ...finalGoalProgress };
   }, [finalGoalProgress, unlockedCategory, victoryShown]);
 
-  snapshotRef.current = { soft, hard, businesses, activeCategory, unlockedCategory, selectedId, businessPageOpen, managers, managerSeed, managerCooldown, victoryShown };
+  snapshotRef.current = { soft, hard, businesses, activeCategory, unlockedCategory, selectedId, businessPageOpen, managerRecruitment, managerSeed, adWatchedCount, adStats, victoryShown };
 
   useEffect(() => {
     const timer = window.setInterval(() => {
@@ -152,7 +165,7 @@ export function App() {
         }
         return result.businesses;
       });
-      setManagerCooldown((value) => Math.max(0, value - dt));
+      setManagerRecruitment((current) => advanceRecruitment(current, dt));
     }, 250);
     return () => window.clearInterval(timer);
   }, []);
@@ -221,17 +234,11 @@ export function App() {
     };
   }, []);
 
-  useEffect(() => {
-    if (managerCooldown > 0) return;
-    const slot = managers.findIndex((manager) => !manager);
-    if (slot >= 0) addRegularManager(slot);
-  }, [managerCooldown, managers]);
-
-  function runAd(callback: () => void) {
+  function runAd(source: AdSource, callback: () => void) {
     if (adTimer.current != null) window.clearInterval(adTimer.current);
     adReward.current = callback;
     const quiz = AD_MOVIE_QUIZZES[Math.floor(Math.random() * AD_MOVIE_QUIZZES.length)];
-    setActiveAd({ seconds: AD_DURATION_SECONDS, quiz, phase: "watching", selectedAnswer: null, correct: null });
+    setActiveAd({ source, seconds: AD_DURATION_SECONDS, quiz, phase: "watching", selectedAnswer: null, correct: null });
     let left = AD_DURATION_SECONDS;
     adTimer.current = window.setInterval(() => {
       left -= 1;
@@ -252,8 +259,14 @@ export function App() {
     if (!activeAd || activeAd.phase !== "quiz") return;
     const correct = answer === activeAd.quiz.title;
     const reward = adReward.current;
+    if (!reward) return;
     adReward.current = null;
-    reward?.();
+    setAdWatchedCount((value) => value + 1);
+    setAdStats((current) => ({
+      ...current,
+      [activeAd.source]: (current[activeAd.source] ?? 0) + 1,
+    }));
+    reward();
     if (correct) setHard((value) => value + AD_QUIZ_BONUS);
     setActiveAd({ ...activeAd, phase: "result", selectedAnswer: answer, correct });
   }
@@ -264,14 +277,15 @@ export function App() {
   }
 
   function applyOfflineSeconds(seconds: number) {
-    if (seconds < 10) return;
-    const result = advanceOffline(snapshotRef.current, seconds);
+    if (seconds <= 0) return;
+    const grantIncome = seconds >= OFFLINE_THRESHOLD_SECONDS;
+    const result = advanceOffline(snapshotRef.current, seconds, { grantIncome });
     snapshotRef.current = result.snapshot;
     setSoft(result.snapshot.soft);
     setHard(result.snapshot.hard);
     setBusinesses(result.snapshot.businesses);
-    setManagerCooldown(result.snapshot.managerCooldown);
-    if (result.income > 0) {
+    setManagerRecruitment(result.snapshot.managerRecruitment);
+    if (grantIncome && result.income > 0) {
       setOfflineIncome((current) => ({
         seconds: (current?.seconds ?? 0) + seconds,
         income: (current?.income ?? 0) + result.income,
@@ -283,7 +297,7 @@ export function App() {
   function handleDoubleOfflineIncome() {
     if (!offlineIncome || offlineIncome.income <= 0) return;
     const bonus = offlineIncome.income;
-    runAd(() => {
+    runAd("offlineIncome", () => {
       setSoft((value) => value + bonus);
       setOfflineIncome(null);
     });
@@ -302,6 +316,7 @@ export function App() {
     burstId.current = 0;
     autoEffectClock.current = 0;
     cheatBuffer.current = "";
+    managerSeedRef.current = 2;
     timeWarpRemainingRef.current = 0;
     claimedExpansionRewards.current.clear();
     setSoft(100);
@@ -313,9 +328,11 @@ export function App() {
     setLevelUnlockCategory(null);
     setSelectedId(0);
     setBusinessPageOpen(false);
-    setManagers([createManager(0), createManager(1), createManager(2)]);
-    setManagerSeed(3);
-    setManagerCooldown(MANAGER_COOLDOWN_SECONDS);
+    setManagerRecruitment(createDefaultRecruitment());
+    setManagerSeed(2);
+    setAdWatchedCount(0);
+    setAdStats(createDefaultAdStats());
+    setAdStatsOpen(false);
     setAssignBusinessId(null);
     setActiveAd(null);
     setOfflineIncome(null);
@@ -326,33 +343,47 @@ export function App() {
     setIncomeBursts([]);
   }
 
-  function handleSearchManager(slot: number) {
-    if (slot < 0 || managers[slot]) return;
-    if (managerCooldown <= 0) addRegularManager(slot);
-    else runAd(() => addRegularManager(slot));
+  function takeManagerSeed(): number {
+    const seed = managerSeedRef.current;
+    const nextSeed = seed + 1;
+    managerSeedRef.current = nextSeed;
+    setManagerSeed(nextSeed);
+    return seed;
   }
 
-  function addRegularManager(slot: number) {
-    setManagers((current) => {
-      if (slot < 0 || current[slot]) return current;
-      return current.map((manager, idx) => (idx === slot ? createManager(managerSeed) : manager));
+  function handleStartManagerReroll() {
+    if (managerRecruitment.searchRemaining > 0 || managerRecruitment.attempts <= 0) return;
+    const seed = takeManagerSeed();
+    setManagerRecruitment((current) => {
+      if (current.searchRemaining > 0 || current.attempts <= 0) return current;
+      return {
+        ...current,
+        attempts: current.attempts - 1,
+        searchRemaining: MANAGER_SEARCH_SECONDS,
+        pendingSeed: seed,
+      };
     });
-    setManagerSeed((seed) => seed + 1);
-    setManagerCooldown(MANAGER_COOLDOWN_SECONDS);
+  }
+
+  function handleManagerRerollAd() {
+    runAd("managerAttempts", () => setManagerRecruitment((current) => ({
+      ...current,
+      attempts: current.attempts + MANAGER_AD_REROLL_ATTEMPTS,
+    })));
   }
 
   function handleHirePremiumManager() {
     if (assignBusinessId == null || hard < PREMIUM_MANAGER_COST) return;
     const business = businesses.find((item) => item.id === assignBusinessId);
     if (!business?.opened || business.manager) return;
+    const seed = takeManagerSeed();
     setHard((value) => value - PREMIUM_MANAGER_COST);
-    updateBusiness(assignBusinessId, (item) => ({ ...item, manager: createPremiumManager(managerSeed) }));
-    setManagerSeed((seed) => seed + 1);
+    updateBusiness(assignBusinessId, (item) => ({ ...item, manager: createPremiumManager(seed) }));
     setAssignBusinessId(null);
   }
 
   function handleGemAd() {
-    runAd(() => setHard((value) => value + GEM_AD_REWARD));
+    runAd("gems", () => setHard((value) => value + GEM_AD_REWARD));
   }
 
   function handleClaimGoal() {
@@ -410,12 +441,12 @@ export function App() {
     setBusinessPageOpen(true);
   }
 
-  function handleAssign(slot: number) {
-    if (assignBusinessId == null || !managers[slot]) return;
+  function handleAssignRegularManager() {
+    if (assignBusinessId == null || !managerRecruitment.candidate || managerRecruitment.searchRemaining > 0) return;
     const business = businesses.find((item) => item.id === assignBusinessId);
     if (!business?.opened) return;
-    updateBusiness(assignBusinessId, (item) => ({ ...item, manager: managers[slot] }));
-    setManagers((current) => current.map((manager, idx) => (idx === slot ? null : manager)));
+    updateBusiness(assignBusinessId, (item) => ({ ...item, manager: managerRecruitment.candidate }));
+    setManagerRecruitment((current) => ({ ...current, candidate: null }));
     setAssignBusinessId(null);
   }
 
@@ -463,7 +494,7 @@ export function App() {
   function handleSkipExpansion(id: number) {
     const business = businesses.find((item) => item.id === id);
     if (!business?.opened || business.expansionRemaining <= 0) return;
-    runAd(() => updateBusiness(id, (item) => (
+    runAd("skipExpansion", () => updateBusiness(id, (item) => (
       item.expansionRemaining > 0 ? completeExpansion(item) : item
     )));
   }
@@ -492,7 +523,7 @@ export function App() {
   function handleOptimizeBusinessAd(id: number) {
     const business = businesses.find((item) => item.id === id);
     if (!business || nextOptimizationCost(business.optimizationLevel) == null) return;
-    runAd(() => applyOptimization(id));
+    runAd("optimization", () => applyOptimization(id));
   }
 
   function applyOptimization(id: number) {
@@ -506,11 +537,12 @@ export function App() {
   function handleOpenBusiness(id: number) {
     const business = businesses.find((item) => item.id === id);
     if (!business || business.opened || business.unlockRemaining == null || business.unlockRemaining > 0 || soft < business.openCost) return;
+    if (isHoldingCategory(business.catIdx)) return;
     const nextBalance = soft - business.openCost;
     setSoft(nextBalance);
     setBusinesses((current) => current.map((item) => {
       if (item.id === id) return { ...item, opened: true };
-      if (item.id === id + 1 && item.unlockRemaining == null && item.catIdx <= unlockedCategory) {
+      if (item.id === id + 1 && item.unlockRemaining == null && item.catIdx <= unlockedCategory && !isHoldingCategory(item.catIdx)) {
         return {
           ...item,
           openCost: nextBusinessOpenCost(nextBalance, item.id, item.catIdx),
@@ -524,7 +556,7 @@ export function App() {
   function handleSkipUnlock(id: number) {
     const business = businesses.find((item) => item.id === id);
     if (!business || business.opened || business.unlockRemaining == null || business.unlockRemaining <= 0) return;
-    runAd(() => updateBusiness(id, (item) => ({ ...item, unlockRemaining: 0 })));
+    runAd("skipUnlock", () => updateBusiness(id, (item) => ({ ...item, unlockRemaining: 0 })));
   }
 
   function prepareNextHoldingForMerge() {
@@ -536,7 +568,7 @@ export function App() {
     }
     const firstBusinessId = snapshotRef.current.businesses.find((business) => business.catIdx === categoryIndex)?.id ?? null;
     setBusinesses((current) => prepareCategoryForMerger(current, categoryIndex));
-    setUnlockedCategory((value) => Math.max(value, categoryIndex));
+    if (!isHoldingCategory(categoryIndex)) setUnlockedCategory((value) => Math.max(value, categoryIndex));
     setActiveCategory(categoryIndex);
     setSelectedId(firstBusinessId);
     setBusinessPageOpen(false);
@@ -547,9 +579,12 @@ export function App() {
   function handleMergeCategory(categoryIndex: number) {
     const status = categoryMergerStatus(businesses, categoryIndex);
     if (!status.ready || status.merged) return;
-    const mergedBusinesses = mergeBusinessesIntoHolding(businesses, categoryIndex);
+    const mergedBusinesses = syncHoldingCategoryBusinesses(mergeBusinessesIntoHolding(businesses, categoryIndex));
+    const resultName = isHoldingCategory(categoryIndex)
+      ? FINAL_CORPORATION_NAME
+      : holdingBusinessNameForCategory(categoryIndex);
     setHoldingMergeAnimation({
-      categoryName: CATEGORIES[categoryIndex]?.name ?? "Группа",
+      resultName,
       beforeIncome: totalAutoIncomePerSecond(businesses),
       afterIncome: totalAutoIncomePerSecond(mergedBusinesses),
       businesses: businesses
@@ -559,7 +594,7 @@ export function App() {
     setBusinesses((current) => {
       const currentStatus = categoryMergerStatus(current, categoryIndex);
       if (!currentStatus.ready || currentStatus.merged) return current;
-      return mergeBusinessesIntoHolding(current, categoryIndex);
+      return syncHoldingCategoryBusinesses(mergeBusinessesIntoHolding(current, categoryIndex));
     });
   }
 
@@ -567,7 +602,7 @@ export function App() {
 
   return (
     <main className="app-shell">
-      <TopBar soft={soft} hard={hard} totalAuto={totalAuto} timeWarpRemaining={timeWarpRemaining} onGemAd={handleGemAd} onReset={handleFullReset} />
+      <TopBar soft={soft} hard={hard} totalAuto={totalAuto} timeWarpRemaining={timeWarpRemaining} adWatchedCount={adWatchedCount} onAdStats={() => setAdStatsOpen(true)} onGemAd={handleGemAd} onReset={handleFullReset} />
       {!businessPageOpen && <GoalBar soft={soft} goal={currentGoal} opening={unlockingCategory != null} onClaim={handleClaimGoal} />}
       <div className="content-scroll">
         <div className={`screen-transition ${businessPageOpen ? "detail-screen-transition" : "main-screen-transition"}`} key={screenKey}>
@@ -581,8 +616,6 @@ export function App() {
                 activeCategory={activeCategory}
                 selectedId={selectedId}
                 soft={soft}
-                hasFreeManager={managers.some((item) => !item)}
-                hasStoredManager={managers.some(Boolean) || hard >= PREMIUM_MANAGER_COST}
                 onSelect={openBusinessPage}
                 onCollect={handleCollect}
                 onOpenAssign={setAssignBusinessId}
@@ -595,8 +628,25 @@ export function App() {
           )}
         </div>
       </div>
-      {!businessPageOpen && <Tabs active={activeCategory} unlocked={unlockedCategory} openingCategory={unlockingCategory} businesses={businesses} soft={soft} onChange={(index) => { if (index > unlockedCategory) return; setActiveCategory(index); setSelectedId(businesses.find((item) => item.catIdx === index)?.id ?? null); }} />}
-      <ManagerModal business={businesses.find((item) => item.id === assignBusinessId) ?? null} managers={managers} premiumManager={premiumPreview} hard={hard} managerCooldown={managerCooldown} open={assignBusinessId != null} onSearch={handleSearchManager} onPremiumHire={handleHirePremiumManager} onAssign={handleAssign} onFire={(slot) => setManagers((current) => current.map((item, idx) => (idx === slot ? null : item)))} onClose={() => setAssignBusinessId(null)} />
+      {!businessPageOpen && <Tabs active={activeCategory} unlocked={unlockedCategory} openingCategory={unlockingCategory} businesses={businesses} soft={soft} onChange={(index) => { if (!canOpenCategoryTab(index, unlockedCategory, businesses)) return; setActiveCategory(index); setSelectedId(businesses.find((item) => item.catIdx === index)?.id ?? null); }} />}
+      <ManagerModal
+        business={businesses.find((item) => item.id === assignBusinessId) ?? null}
+        regularManager={managerRecruitment.searchRemaining > 0 ? rouletteManager : managerRecruitment.candidate}
+        premiumManager={premiumPreview}
+        hard={hard}
+        attempts={managerRecruitment.attempts}
+        maxAttempts={MANAGER_ROLL_MAX_ATTEMPTS}
+        rechargeRemaining={managerRecruitment.cooldown}
+        searchRemaining={managerRecruitment.searchRemaining}
+        searchDuration={MANAGER_SEARCH_SECONDS}
+        open={assignBusinessId != null}
+        onPremiumHire={handleHirePremiumManager}
+        onAssignRegular={handleAssignRegularManager}
+        onReroll={handleStartManagerReroll}
+        onRerollAd={handleManagerRerollAd}
+        onClose={() => setAssignBusinessId(null)}
+      />
+      <AdStatsModal open={adStatsOpen} total={adWatchedCount} stats={adStats} onClose={() => setAdStatsOpen(false)} />
       <OfflineIncomeModal reward={offlineIncome} onClose={() => setOfflineIncome(null)} onDouble={handleDoubleOfflineIncome} />
       <AdModal ad={activeAd} onAnswer={handleAdAnswer} onCloseResult={handleCloseAdResult} />
       <LevelUnlockModal name={levelUnlockCategory == null ? null : CATEGORIES[levelUnlockCategory]?.name ?? null} onClose={() => setLevelUnlockCategory(null)} />
@@ -608,11 +658,13 @@ export function App() {
 
 function finalQuestProgress(businesses: Business[]) {
   const maxOptimization = OPTIMIZATION_COSTS.length;
-  const done = businesses.reduce((sum, business) => (
+  const businessDone = businesses.reduce((sum, business) => (
     sum
     + (business.opened && business.tier >= MAX_BUSINESS_TIER ? 1 : 0)
     + (business.opened && business.optimizationLevel >= maxOptimization ? 1 : 0)
   ), 0);
-  const total = businesses.length * 2;
-  return { done, total, ready: total > 0 && done === total };
+  const corporationMerged = categoryMergerStatus(businesses, holdingCategoryIndex()).merged;
+  const done = businessDone + (corporationMerged ? 1 : 0);
+  const total = businesses.length * 2 + 1;
+  return { done, total, ready: total > 0 && done === total && corporationMerged };
 }

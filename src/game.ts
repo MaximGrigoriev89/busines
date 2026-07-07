@@ -1,7 +1,55 @@
-import { CATEGORIES, COLLECT_TIME, EQUIPMENT_OPTIONS, EXPANSION_BALANCE, FACES, LONG_ACTION_OPTIONS, MANAGER_RARITY_STATS, MAX_BUSINESS_TIER, OPTIMIZATION_BONUSES, OPTIMIZATION_COSTS, RARITIES, TIER_INCOME_MULTIPLIERS } from "./data";
+import { CATEGORIES, COLLECT_TIME, EQUIPMENT_OPTIONS, EXPANSION_BALANCE, FACES, LONG_ACTION_OPTIONS, MANAGER_RARITY_STATS, MAX_BUSINESS_TIER, OPTIMIZATION_BONUSES, OPTIMIZATION_COSTS, TIER_INCOME_MULTIPLIERS } from "./data";
 import type { Business, ExpansionRequirement, Manager } from "./types";
 
 export const HOLDING_GLOBAL_INCOME_BONUS = 3;
+
+export function holdingCategoryIndex(): number {
+  return CATEGORIES.length - 1;
+}
+
+export function isHoldingCategory(categoryIndex: number): boolean {
+  return categoryIndex === holdingCategoryIndex();
+}
+
+export function sourceCategoryIndexForHoldingBusiness(business: Pick<Business, "id" | "catIdx">): number | null {
+  if (!isHoldingCategory(business.catIdx)) return null;
+  const firstHoldingBusinessId = CATEGORIES
+    .slice(0, holdingCategoryIndex())
+    .reduce((sum, category) => sum + category.biz.length, 0);
+  const sourceCategoryIndex = business.id - firstHoldingBusinessId;
+  return sourceCategoryIndex >= 0 && sourceCategoryIndex < holdingCategoryIndex() ? sourceCategoryIndex : null;
+}
+
+export function isHoldingCategoryAvailable(businesses: Business[]): boolean {
+  return Array.from({ length: holdingCategoryIndex() }, (_, index) => index)
+    .some((categoryIndex) => isCategoryFullyMerged(businesses, categoryIndex));
+}
+
+export function syncHoldingCategoryBusinesses(businesses: Business[]): Business[] {
+  return businesses.map((business) => {
+    const sourceCategoryIndex = sourceCategoryIndexForHoldingBusiness(business);
+    if (sourceCategoryIndex == null) return business;
+
+    const sourceMerged = isCategoryFullyMerged(businesses, sourceCategoryIndex);
+    if (!sourceMerged) {
+      return {
+        ...business,
+        opened: false,
+        unlockRemaining: null,
+        collectTimer: 0,
+        collectReady: false,
+        manager: null,
+      };
+    }
+
+    return {
+      ...business,
+      opened: true,
+      openCost: 0,
+      unlockRemaining: 0,
+    };
+  });
+}
 
 export function createBusinesses(): Business[] {
   let id = 0;
@@ -36,7 +84,7 @@ export function createBusinesses(): Business[] {
 }
 
 export function createManager(seed: number): Manager {
-  const rarity = RARITIES[seed % RARITIES.length];
+  const rarity = rollManagerRarity(seed);
   return makeManager(seed, rarity);
 }
 
@@ -66,6 +114,20 @@ function makeManager(seed: number, rarity: Manager["rarity"]): Manager {
     salary,
     desc: `Эфф. ${Math.round(efficiency * 100)}% · зарпл. x${salary.toFixed(2)}`,
   };
+}
+
+function rollManagerRarity(seed: number): Manager["rarity"] {
+  const roll = seededRoll(seed);
+  if (roll < 0.62) return "white";
+  if (roll < 0.86) return "green";
+  if (roll < 0.965) return "blue";
+  if (roll < 0.995) return "purple";
+  return "orange";
+}
+
+function seededRoll(seed: number): number {
+  const raw = Math.sin((seed + 1) * 127.1 + 31.7) * 43758.5453123;
+  return raw - Math.floor(raw);
 }
 
 export function baseIncome(business: Business): number {
@@ -180,10 +242,12 @@ function mergedCategoryCount(businesses: Business[]): number {
 
 function mergedCategoryIndexes(businesses: Business[]): number[] {
   const categories = Array.from(new Set(businesses.map((business) => business.catIdx)));
-  return categories.filter((categoryIndex) => {
-    const group = businesses.filter((business) => business.catIdx === categoryIndex);
-    return group.length > 0 && group.every((business) => business.mergedIntoHolding);
-  });
+  return categories.filter((categoryIndex) => isCategoryFullyMerged(businesses, categoryIndex));
+}
+
+function isCategoryFullyMerged(businesses: Business[], categoryIndex: number): boolean {
+  const group = businesses.filter((business) => business.catIdx === categoryIndex);
+  return group.length > 0 && group.every((business) => business.mergedIntoHolding);
 }
 
 function holdingIncomeForCategory(group: Business[]): number {

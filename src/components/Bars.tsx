@@ -7,11 +7,13 @@ interface TopBarProps {
   hard: number;
   totalAuto: number;
   timeWarpRemaining: number;
+  adWatchedCount: number;
+  onAdStats: () => void;
   onGemAd: () => void;
   onReset: () => void;
 }
 
-export function TopBar({ soft, hard, totalAuto, timeWarpRemaining, onGemAd, onReset }: TopBarProps) {
+export function TopBar({ soft, hard, totalAuto, timeWarpRemaining, adWatchedCount, onAdStats, onGemAd, onReset }: TopBarProps) {
   return (
     <header className="top-bar">
       <div className="money-pill">
@@ -28,6 +30,10 @@ export function TopBar({ soft, hard, totalAuto, timeWarpRemaining, onGemAd, onRe
           <Gem size={18} />
           <span>{hard}</span>
         </div>
+        <button className="ad-counter-pill" type="button" title="Статистика рекламы" aria-label={`Просмотрено реклам: ${adWatchedCount}`} onClick={onAdStats}>
+          <Tv size={15} />
+          <span>{adWatchedCount}</span>
+        </button>
         <button className="gem-ad-button" type="button" title="Реклама за гемы" aria-label="Реклама за гемы" onClick={onGemAd}>
           <Tv size={16} />
           <span>Рекл. +{GEM_AD_REWARD} 💎</span>

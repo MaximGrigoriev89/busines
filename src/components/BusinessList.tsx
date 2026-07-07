@@ -1,7 +1,7 @@
 import { Building2, Clock, Info, Lock, Tv, UserPlus } from "lucide-react";
 import { businessArtForBusiness } from "../businessArt";
-import { COLLECT_TIME, MAX_BUSINESS_TIER, OPTIMIZATION_COSTS, RARITY_CLASS, RARITY_NAME } from "../data";
-import { effectiveIncome, formatMoney, optimizationBonus } from "../game";
+import { CATEGORIES, COLLECT_TIME, MAX_BUSINESS_TIER, OPTIMIZATION_COSTS, RARITY_CLASS, RARITY_NAME } from "../data";
+import { effectiveIncome, formatMoney, isHoldingCategory, optimizationBonus, sourceCategoryIndexForHoldingBusiness } from "../game";
 import { businessNotifications } from "../notifications";
 import { BusinessLevelStars } from "./BusinessLevelStars";
 import type { BusinessNotification } from "../notifications";
@@ -19,8 +19,6 @@ interface BusinessListProps {
   activeCategory: number;
   selectedId: number | null;
   soft: number;
-  hasFreeManager: boolean;
-  hasStoredManager: boolean;
   incomeBursts: IncomeBurst[];
   onSelect: (id: number) => void;
   onCollect: (id: number) => void;
@@ -32,11 +30,12 @@ interface BusinessListProps {
 
 export function BusinessList(props: BusinessListProps) {
   const items = props.businesses.filter((business) => business.catIdx === props.activeCategory);
+  const title = isHoldingCategory(props.activeCategory) ? "Холдинги" : "Бизнесы";
   return (
     <section className="business-list-panel">
       <div className="business-list-head">
         <div className="business-list-title">
-          <div className="section-title">Бизнесы</div>
+          <div className="section-title">{title}</div>
           <CategoryStarProgress businesses={items} />
         </div>
       </div>
@@ -82,7 +81,7 @@ function StarProgressRow({ label, businesses, max, value }: { label: string; bus
 }
 
 function BusinessCard(props: BusinessListProps & { business: Business }) {
-  const { business, selectedId, soft, hasStoredManager, incomeBursts, onSelect, onCollect, onOpenAssign, onOpenBusiness, onSkipUnlock } = props;
+  const { business, selectedId, soft, incomeBursts, onSelect, onCollect, onOpenAssign, onOpenBusiness, onSkipUnlock } = props;
   if (!business.opened) {
     return <LockedBusinessCard business={business} soft={soft} onOpenBusiness={onOpenBusiness} onSkipUnlock={onSkipUnlock} />;
   }
@@ -136,7 +135,7 @@ function BusinessCard(props: BusinessListProps & { business: Business }) {
         ) : readyToCollect ? (
           null
         ) : (
-          <ManagerFrame hasStoredManager={hasStoredManager} onOpenAssign={() => onOpenAssign(business.id)} />
+          <ManagerFrame onOpenAssign={() => onOpenAssign(business.id)} />
         )}
         <button
           className="business-card-open"
@@ -158,11 +157,15 @@ function LockedBusinessCard({ business, soft, onOpenBusiness, onSkipUnlock }: { 
   const waitingPrevious = business.unlockRemaining == null;
   const waitingTimer = business.unlockRemaining != null && business.unlockRemaining > 0;
   const ready = business.unlockRemaining === 0;
+  const holdingSourceCategory = sourceCategoryIndexForHoldingBusiness(business);
+  const waitingHoldingMerge = holdingSourceCategory != null && !ready;
   const hidden = !ready;
   const canOpen = ready && soft >= business.openCost;
   const notifications = businessNotifications(business, soft);
   const art = businessArtForBusiness(business);
-  const lockText = waitingPrevious
+  const lockText = waitingHoldingMerge
+    ? `Нужно слияние: ${CATEGORIES[holdingSourceCategory]?.name ?? "группа"}`
+    : waitingPrevious
     ? "После предыдущего бизнеса"
     : waitingTimer
       ? `Откроется через ${formatTime(business.unlockRemaining ?? 0)}`
@@ -183,13 +186,15 @@ function LockedBusinessCard({ business, soft, onOpenBusiness, onSkipUnlock }: { 
         <div className="business-card-head">
           <h3 className="business-card-title">{hidden ? "???" : business.name}</h3>
           <div className="business-card-badges">
-            <span className="status-pill manual">{ready ? "Доступен" : waitingTimer ? "Таймер" : "Закрыт"}</span>
+            <span className="status-pill manual">{ready ? "Доступен" : waitingHoldingMerge ? "Слияние" : waitingTimer ? "Таймер" : "Закрыт"}</span>
           </div>
         </div>
         <div className="locked-business-line">{canOpen ? "Можно открыть" : lockText}</div>
       </div>
       <div className="business-card-side">
-        {waitingTimer ? (
+        {waitingHoldingMerge ? (
+          <Lock size={18} className="business-card-arrow" />
+        ) : waitingTimer ? (
           <button className="business-open-action ad" onClick={(event) => { event.stopPropagation(); onSkipUnlock(business.id); }} title="Пропустить ожидание за рекламу">
             <Tv size={18} />
             <span>Skip</span>
@@ -233,11 +238,11 @@ function BusinessProgress({ business, collectAmount }: { business: Business; col
   );
 }
 
-function ManagerFrame({ hasStoredManager, onOpenAssign }: { hasStoredManager: boolean; onOpenAssign: () => void }) {
+function ManagerFrame({ onOpenAssign }: { onOpenAssign: () => void }) {
   return (
     <button className="manager-frame action" onClick={(event) => { event.stopPropagation(); onOpenAssign(); }} title="Назначить менеджера">
       <UserPlus size={20} />
-      <span>{hasStoredManager ? "Назначить" : "Найти"}</span>
+      <span>Менеджер</span>
     </button>
   );
 }

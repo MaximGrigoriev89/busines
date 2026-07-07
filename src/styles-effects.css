@@ -137,14 +137,14 @@
 .holding-merge-business {
   opacity: 0;
   transform: translate(var(--merge-from-x), var(--merge-from-y)) scale(0.84);
-  animation: holdingBusinessMerge 1.05s cubic-bezier(0.18, 0.82, 0.22, 1) both;
-  animation-delay: calc(var(--merge-index) * 95ms);
+  animation: holdingBusinessMerge 3.3s cubic-bezier(0.18, 0.82, 0.22, 1) both;
+  animation-delay: calc(var(--merge-index) * 270ms);
 }
 
 .holding-profit-card.after,
 .holding-profit-gain {
   animation: holdingProfitPop 0.46s ease-out both;
-  animation-delay: 0.78s;
+  animation-delay: 3s;
 }
 
 .merger-panel.merged .merger-emblem {

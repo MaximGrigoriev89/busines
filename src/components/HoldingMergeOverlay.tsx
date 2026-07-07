@@ -3,7 +3,7 @@ import type { CSSProperties } from "react";
 import { formatMoney } from "../game";
 
 export interface HoldingMergeAnimation {
-  categoryName: string;
+  resultName: string;
   beforeIncome: number;
   afterIncome: number;
   businesses: Array<{
@@ -35,7 +35,7 @@ export function HoldingMergeOverlay({ merge, onClose }: HoldingMergeOverlayProps
       <div className="holding-merge-box">
         <div className="holding-merge-head">
           <div className="holding-merge-kicker"><GitMerge size={15} /> Слияние завершено</div>
-          <h2>{merge.categoryName}: холдинг</h2>
+          <h2>{merge.resultName}</h2>
         </div>
 
         <div className="holding-merge-stage" aria-hidden="true">

@@ -8,6 +8,9 @@ export const AD_HINT_SECONDS = 6;
 export const AD_DURATION_SECONDS = AD_HINT_SECONDS * 5;
 export const PREMIUM_MANAGER_COST = 7;
 export const MANAGER_COOLDOWN_SECONDS = 20 * 60;
+export const MANAGER_ROLL_MAX_ATTEMPTS = 3;
+export const MANAGER_AD_REROLL_ATTEMPTS = 3;
+export const MANAGER_SEARCH_SECONDS = 5;
 export const OPTIMIZATION_COSTS = [1, 2, 4, 8, 12];
 export const OPTIMIZATION_BONUSES = [0.05, 0.08, 0.12, 0.17, 0.23];
 export const TIER_INCOME_MULTIPLIERS = [1, 2.7, 6.2];
@@ -23,8 +26,20 @@ export const CATEGORY_UNLOCK_GOALS = [
   { targetCategory: 1, cost: 8_000 },
   { targetCategory: 2, cost: 90_000 },
   { targetCategory: 3, cost: 450_000 },
-  { targetCategory: 4, cost: 2_200_000 },
 ];
+
+export const FINAL_CORPORATION_NAME = "Мегакорпорация";
+
+export const HOLDING_BUSINESS_SEEDS: CategorySeed["biz"] = [
+  { n: "Сеть ресторанов", ic: "🏙️", base: 62, salary: 13.5 },
+  { n: "Дата-центр", ic: "🗄️", base: 76, salary: 16.5 },
+  { n: "Медиа-холдинг", ic: "📡", base: 92, salary: 20 },
+  { n: "Промышленный парк", ic: "🏭", base: 112, salary: 24.5 },
+];
+
+export function holdingBusinessNameForCategory(categoryIndex: number): string {
+  return HOLDING_BUSINESS_SEEDS[categoryIndex]?.n ?? "Холдинг";
+}
 
 export const AD_SLOGANS = [
   "Купи ничего. Получи уверенность.",
@@ -296,8 +311,7 @@ export const CATEGORIES: CategorySeed[] = [
     { n: "IT-студия", ic: "🖥️", base: 15, salary: 3.2 }, { n: "Логистика", ic: "🚛", base: 17, salary: 3.8 },
     { n: "Спа-комплекс", ic: "🧖", base: 19, salary: 4.4 }, { n: "Геймдев", ic: "🎮", base: 22, salary: 5.2 },
   ] },
-  { name: "Кластеры", icon: "★★★★★", biz: [
-    { n: "Сеть ресторанов", ic: "🏙️", base: 32, salary: 8 }, { n: "Дата-центр", ic: "🗄️", base: 36, salary: 9.5 },
-    { n: "Медиа-холдинг", ic: "📡", base: 40, salary: 11 }, { n: "Промышленный парк", ic: "🏭", base: 45, salary: 12.5 },
+  { name: "Холдинги", icon: "★★★★★", biz: [
+    ...HOLDING_BUSINESS_SEEDS,
   ] },
 ];

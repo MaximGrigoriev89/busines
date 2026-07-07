@@ -9,6 +9,14 @@ export interface Manager {
   desc: string;
 }
 
+export interface ManagerRecruitment {
+  candidate: Manager | null;
+  attempts: number;
+  cooldown: number;
+  searchRemaining: number;
+  pendingSeed: number | null;
+}
+
 export interface CategorySeed {
   name: string;
   icon: string;
@@ -37,7 +45,22 @@ export interface AdMovieQuiz {
   options: string[];
 }
 
+export const AD_SOURCE_IDS = [
+  "gems",
+  "managerAttempts",
+  "offlineIncome",
+  "skipExpansion",
+  "optimization",
+  "skipUnlock",
+  "other",
+] as const;
+
+export type AdSource = typeof AD_SOURCE_IDS[number];
+
+export type AdStats = Record<AdSource, number>;
+
 export interface ActiveAd {
+  source: AdSource;
   seconds: number;
   quiz: AdMovieQuiz;
   phase: "watching" | "quiz" | "result";

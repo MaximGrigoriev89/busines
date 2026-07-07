@@ -1,7 +1,7 @@
 import { Building2, GitMerge, LockKeyhole, Star, TrendingUp } from "lucide-react";
 import type { ReactNode } from "react";
-import { CATEGORIES } from "../data";
-import { categoryMergerStatus, formatMoney, HOLDING_GLOBAL_INCOME_BONUS } from "../game";
+import { CATEGORIES, FINAL_CORPORATION_NAME, holdingBusinessNameForCategory } from "../data";
+import { categoryMergerStatus, formatMoney, HOLDING_GLOBAL_INCOME_BONUS, isHoldingCategory } from "../game";
 import type { Business } from "../types";
 
 interface MergerPanelProps {
@@ -13,18 +13,26 @@ interface MergerPanelProps {
 export function MergerPanel({ businesses, activeCategory, onMerge }: MergerPanelProps) {
   const status = categoryMergerStatus(businesses, activeCategory);
   const categoryName = CATEGORIES[activeCategory]?.name ?? "Группа";
+  const finalCorporation = isHoldingCategory(activeCategory);
+  const holdingName = finalCorporation ? FINAL_CORPORATION_NAME : holdingBusinessNameForCategory(activeCategory);
   const progress = status.starsTotal > 0 ? Math.min(100, (status.starsDone / status.starsTotal) * 100) : 0;
   const bonusPercent = HOLDING_GLOBAL_INCOME_BONUS * 100;
   const stateText = status.merged
-    ? "Холдинг"
+    ? finalCorporation ? "Корпорация" : "Холдинг"
     : status.ready
       ? "Готово"
       : "Не готово";
   const description = status.merged
-    ? `Бизнесы остановлены, менеджеров можно менять.`
+    ? finalCorporation
+      ? "Холдинги объединены в финальную корпорацию."
+      : `Бизнесы остановлены, менеджеров можно менять.`
     : status.ready
-      ? `Вся шкала ${categoryName} заполнена.`
-      : "Заполните шкалу группы для слияния.";
+      ? finalCorporation
+        ? "Все холдинги готовы к корпорации."
+        : `Вся шкала ${categoryName} заполнена.`
+      : finalCorporation
+        ? "Откройте и прокачайте холдинги для корпорации."
+        : "Заполните шкалу группы для слияния.";
   const ActionIcon = status.merged ? TrendingUp : status.ready ? GitMerge : LockKeyhole;
 
   return (
@@ -45,17 +53,17 @@ export function MergerPanel({ businesses, activeCategory, onMerge }: MergerPanel
           )}
         </div>
         <div className="merger-copy">
-          <strong>{status.merged ? `${categoryName}: холдинг` : "Крупный холдинг"}</strong>
+          <strong>{holdingName}</strong>
           <span>{description}</span>
         </div>
         <button
           className="merger-action"
           disabled={!status.ready || status.merged}
           onClick={() => onMerge(activeCategory)}
-          title={status.ready ? "Объединить бизнесы группы" : "Нужно заполнить шкалу группы"}
+          title={status.ready ? finalCorporation ? "Объединить холдинги в корпорацию" : "Объединить бизнесы группы" : "Нужно заполнить шкалу группы"}
         >
           <ActionIcon size={17} />
-          <span>{status.merged ? "Есть" : status.ready ? "Слить" : "Нет"}</span>
+          <span>{status.merged ? "Есть" : status.ready ? finalCorporation ? "Собрать" : "Слить" : "Нет"}</span>
         </button>
       </div>
       <div className="merger-metrics">

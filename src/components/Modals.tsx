@@ -1,75 +1,154 @@
-import { Check, Gem, Search, Tv, UserMinus, X } from "lucide-react";
-import { AD_DURATION_SECONDS, AD_HINT_SECONDS, AD_QUIZ_BONUS, PREMIUM_MANAGER_COST, RARITY_CLASS, RARITY_NAME } from "../data";
+import { Check, RefreshCw, Search, Tv, X } from "lucide-react";
+import { AD_DURATION_SECONDS, AD_HINT_SECONDS, AD_QUIZ_BONUS, MANAGER_AD_REROLL_ATTEMPTS, PREMIUM_MANAGER_COST, RARITY_CLASS, RARITY_NAME } from "../data";
 import { formatMoney, managerSalary } from "../game";
-import type { ActiveAd, Business, Manager, OfflineIncome } from "../types";
+import type { ActiveAd, AdSource, AdStats, Business, Manager, OfflineIncome } from "../types";
 import { managerEfficiencyClass } from "./managerUi";
+
+const AD_STAT_ROWS: Array<{ source: AdSource; label: string; note: string }> = [
+  { source: "gems", label: "Гемы", note: "Кнопка в верхней панели" },
+  { source: "managerAttempts", label: "Попытки менеджера", note: "Окно менеджеров" },
+  { source: "offlineIncome", label: "Офлайн-доход", note: "Удвоение награды" },
+  { source: "skipExpansion", label: "Ускорение расширения", note: "Экран бизнеса" },
+  { source: "optimization", label: "Оптимизация", note: "Оптимизация за рекламу" },
+  { source: "skipUnlock", label: "Открытие бизнеса", note: "Пропуск таймера" },
+  { source: "other", label: "Без категории", note: "Старые просмотры" },
+];
 
 interface ManagerModalProps {
   business: Business | null;
-  managers: Array<Manager | null>;
+  regularManager: Manager | null;
   premiumManager: Manager;
   hard: number;
-  managerCooldown: number;
+  attempts: number;
+  maxAttempts: number;
+  rechargeRemaining: number;
+  searchRemaining: number;
+  searchDuration: number;
   open: boolean;
-  onSearch: (slot: number) => void;
   onPremiumHire: () => void;
-  onAssign: (slot: number) => void;
-  onFire: (slot: number) => void;
+  onAssignRegular: () => void;
+  onReroll: () => void;
+  onRerollAd: () => void;
   onClose: () => void;
 }
 
-export function ManagerModal({ business, managers, premiumManager, hard, managerCooldown, open, onSearch, onPremiumHire, onAssign, onFire, onClose }: ManagerModalProps) {
+export function ManagerModal({ business, regularManager, premiumManager, hard, attempts, maxAttempts, rechargeRemaining, searchRemaining, searchDuration, open, onPremiumHire, onAssignRegular, onReroll, onRerollAd, onClose }: ManagerModalProps) {
   if (!open) return null;
   const canHirePremium = hard >= PREMIUM_MANAGER_COST;
-  const hireLabel = managerCooldown <= 0 ? "готов" : `реклама / ${formatTimer(managerCooldown)}`;
+  const searching = searchRemaining > 0;
+  const canReroll = attempts > 0 && !searching;
+  const nextAttemptText = attempts >= maxAttempts ? "Попытки полные" : `+1 через ${formatTimer(rechargeRemaining)}`;
+  const searchPct = searching ? Math.max(0, Math.min(100, 100 - (searchRemaining / searchDuration) * 100)) : 0;
 
   return (
     <div className="modal-overlay">
-      <div className="modal-box">
+      <div className="modal-box manager-roll-modal">
         <div className="row-between mb-4">
           <h2>Менеджеры</h2>
           <button className="icon-quiet" onClick={onClose}><X size={18} /></button>
         </div>
-        <div className="manager-modal-grid">
-          {managers.map((manager, slot) => (
-            <div className="manager-modal-slot" key={slot}>
-              {manager ? (
-                <div className="manager-choice">
-                  <button className="manager-choice-main" onClick={() => onAssign(slot)}>
-                    <div className={`portrait ${RARITY_CLASS[manager.rarity]}`}>{manager.face}</div>
-                    <div className="min-w-0 text-left">
-                      <div className="text-base font-black">{RARITY_NAME[manager.rarity]}</div>
-                      <div className={`text-sm font-bold ${managerEfficiencyClass(manager)}`}>Эффективность {Math.round(manager.efficiency * 100)}%</div>
-                      <div className="text-xs text-slate-500">{business ? `Зарплата $${managerSalary(business, manager).toFixed(2)}/сек` : `Зарпл. x${manager.salary.toFixed(2)}`}</div>
-                    </div>
-                  </button>
-                  <button className="icon-danger" onClick={() => onFire(slot)} title="Отказать">
-                    <UserMinus size={16} />
-                  </button>
-                </div>
+        <div className="manager-roll-status">
+          <span>Попытки: {attempts}</span>
+          <span>{nextAttemptText}</span>
+        </div>
+        <div className="manager-roll-grid">
+          <div className="manager-offer-card premium">
+            <div className="manager-offer-main">
+              <ManagerOfferBody
+                business={business}
+                manager={premiumManager}
+                title="Прем менеджер"
+                subtitle="Гарантированно сильный"
+                badge={`${PREMIUM_MANAGER_COST} 💎`}
+              />
+            </div>
+            <button className="manager-choose-button premium" disabled={!canHirePremium} onClick={(event) => { event.stopPropagation(); onPremiumHire(); }}>
+              Купить за {PREMIUM_MANAGER_COST} 💎
+            </button>
+          </div>
+          <div className={`manager-offer-card regular ${searching ? "searching" : ""}`}>
+            <div className="manager-offer-main">
+              {regularManager ? (
+                <ManagerOfferBody
+                  business={business}
+                  manager={regularManager}
+                  title={searching ? "Идет поиск" : "Найден менеджер"}
+                  subtitle={searching ? formatTimer(searchRemaining) : "Нажми, чтобы назначить"}
+                  badge={searching ? "поиск" : RARITY_NAME[regularManager.rarity]}
+                />
               ) : (
-                <button className="empty-manager modal-search" onClick={() => onSearch(slot)}>
-                  <Search size={22} />
-                  <span>Искать</span>
-                  <small>{hireLabel}</small>
-                </button>
+                <div className="manager-empty-state">
+                  <Search size={28} />
+                  <strong>Нет кандидата</strong>
+                  <small>{attempts > 0 ? "Запусти поиск за попытку" : "Попытки закончились"}</small>
+                </div>
               )}
             </div>
-          ))}
-          <div className="manager-modal-slot premium-slot">
-            <div className="manager-choice premium-manager-card">
-              <div className={`portrait ${RARITY_CLASS[premiumManager.rarity]}`}>{premiumManager.face}</div>
-              <div className="min-w-0 flex-1 text-left">
-                <div className="text-base font-black">Прем менеджер</div>
-                <div className={`text-sm font-bold ${managerEfficiencyClass(premiumManager)}`}>Эффективность {Math.round(premiumManager.efficiency * 100)}%</div>
-                <div className="text-xs text-slate-500">{business ? `Зарплата $${managerSalary(business, premiumManager).toFixed(2)}/сек` : `Зарпл. x${premiumManager.salary.toFixed(2)}`}</div>
+            <button className="manager-choose-button" disabled={!regularManager || searching} onClick={(event) => { event.stopPropagation(); onAssignRegular(); }}>
+              Выбрать
+            </button>
+            {searching && (
+              <div className="manager-search-progress">
+                <div style={{ width: `${searchPct}%` }} />
               </div>
-              <button className="manager-card-action" disabled={!canHirePremium} onClick={onPremiumHire}>
-                <Gem size={15} />
-                <span>{PREMIUM_MANAGER_COST} 💎</span>
-              </button>
-            </div>
+            )}
+            <button className="manager-reroll-button" disabled={!canReroll} onClick={(event) => { event.stopPropagation(); onReroll(); }}>
+              <RefreshCw size={16} />
+              <span>{searching ? `Поиск ${formatTimer(searchRemaining)}` : attempts > 0 ? "Искать еще" : "Нет попыток"}</span>
+            </button>
           </div>
+        </div>
+        <button className="primary-button ad manager-reroll-ad" onClick={(event) => { event.stopPropagation(); onRerollAd(); }}>
+          <Tv size={18} /> Получить +{MANAGER_AD_REROLL_ATTEMPTS} попытки за рекламу
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function ManagerOfferBody({ business, manager, title, subtitle, badge }: { business: Business | null; manager: Manager; title: string; subtitle: string; badge: string }) {
+  return (
+    <>
+      <div className={`portrait ${RARITY_CLASS[manager.rarity]}`}>{manager.face}</div>
+      <div className="manager-offer-copy">
+        <div className="manager-offer-head">
+          <strong>{title}</strong>
+          <span>{badge}</span>
+        </div>
+        <small>{subtitle}</small>
+        <div className={`manager-offer-stat ${managerEfficiencyClass(manager)}`}>Эффективность {Math.round(manager.efficiency * 100)}%</div>
+        <div className="manager-offer-stat muted">{business ? `Зарплата $${managerSalary(business, manager).toFixed(2)}/сек` : `Зарпл. x${manager.salary.toFixed(2)}`}</div>
+      </div>
+    </>
+  );
+}
+
+export function AdStatsModal({ open, total, stats, onClose }: { open: boolean; total: number; stats: AdStats; onClose: () => void }) {
+  if (!open) return null;
+  const rows = AD_STAT_ROWS.filter((row) => row.source !== "other" || stats.other > 0);
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-box ad-stats-modal" onClick={(event) => event.stopPropagation()}>
+        <div className="row-between">
+          <h2>Реклама</h2>
+          <button className="icon-quiet" onClick={onClose}><X size={18} /></button>
+        </div>
+        <div className="ad-stats-total">
+          <Tv size={18} />
+          <span>Всего просмотрено</span>
+          <strong>{total}</strong>
+        </div>
+        <div className="ad-stats-list">
+          {rows.map((row) => (
+            <div className="ad-stat-row" key={row.source}>
+              <div className="ad-stat-icon"><Tv size={15} /></div>
+              <div className="ad-stat-copy">
+                <strong>{row.label}</strong>
+                <span>{row.note}</span>
+              </div>
+              <b>{stats[row.source] ?? 0}</b>
+            </div>
+          ))}
         </div>
       </div>
     </div>
@@ -156,7 +235,7 @@ export function VictoryModal({ open, onClose }: { open: boolean; onClose: () => 
         <h2>Игра пройдена!</h2>
         <p>Напиши в тред по игре только</p>
         <div className="victory-code">67</div>
-        <p>Так ты подтвердишь что прошёл её</p>
+        <p>Так ты подтвердишь, что прошел ее</p>
         <button className="primary-button expand" onClick={onClose}>Продолжить</button>
       </div>
     </div>
