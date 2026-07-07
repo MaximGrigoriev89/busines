@@ -118,10 +118,10 @@ function makeManager(seed: number, rarity: Manager["rarity"]): Manager {
 
 function rollManagerRarity(seed: number): Manager["rarity"] {
   const roll = seededRoll(seed);
-  if (roll < 0.62) return "white";
-  if (roll < 0.86) return "green";
-  if (roll < 0.965) return "blue";
-  if (roll < 0.995) return "purple";
+  if (roll < 0.42) return "white";
+  if (roll < 0.68) return "green";
+  if (roll < 0.88) return "blue";
+  if (roll < 0.975) return "purple";
   return "orange";
 }
 
