@@ -82,6 +82,19 @@
   box-shadow: 0 0 18px rgba(74, 222, 128, 0.35);
 }
 
+.collect-frame {
+  color: #ecfdf5;
+  background: linear-gradient(180deg, #16a34a, #15803d);
+  border-color: #86efac;
+  box-shadow: 0 8px 18px rgba(22, 163, 74, 0.28);
+}
+
+.collect-frame small {
+  color: inherit;
+  font-size: 10px;
+  font-weight: 950;
+}
+
 .manager-frame-icon {
   font-size: 22px;
   line-height: 1;
@@ -177,6 +190,25 @@
 .primary-button.expand, .invest-button {
   color: #dbeafe;
   background: linear-gradient(135deg, #2563eb, #6d28d9);
+}
+
+.upgrade-preview .primary-button.expand-ready {
+  color: #ffffff;
+  background: linear-gradient(135deg, #0ea5e9, #2563eb 58%, #4f46e5);
+  box-shadow: 0 10px 22px rgba(37, 99, 235, 0.34);
+}
+
+.upgrade-preview .primary-button.expand-locked,
+.upgrade-preview .primary-button.expand-building {
+  color: #cbd5e1;
+  background: #1e293b;
+  box-shadow: none;
+}
+
+.upgrade-preview .primary-button.expansion-ad-button {
+  color: #fff7ed;
+  background: linear-gradient(135deg, #f97316, #c2410c);
+  box-shadow: 0 10px 22px rgba(249, 115, 22, 0.26);
 }
 
 .primary-button.muted {

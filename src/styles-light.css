@@ -244,6 +244,13 @@ button {
   color: #1d4ed8;
 }
 
+.collect-frame {
+  border-color: #16a34a;
+  background: linear-gradient(180deg, #22c55e, #15803d);
+  color: #ffffff;
+  box-shadow: 0 10px 20px rgba(22, 163, 74, 0.22);
+}
+
 .business-card.locked,
 .manager-card-action:disabled,
 .premium-manager-button:disabled,
@@ -723,6 +730,26 @@ button {
 .invest-button,
 .requirement-action {
   background: linear-gradient(135deg, #0ea5e9, #2563eb);
+}
+
+.upgrade-preview .primary-button.expand-ready {
+  color: #ffffff;
+  background: linear-gradient(135deg, #0ea5e9, #2563eb 58%, #4f46e5);
+  box-shadow: 0 10px 22px rgba(37, 99, 235, 0.3);
+}
+
+.upgrade-preview .primary-button.expand-locked,
+.upgrade-preview .primary-button.expand-building {
+  color: #475569;
+  background: #e2e8f0;
+  box-shadow: none;
+}
+
+.upgrade-preview .primary-button.expansion-ad-button {
+  color: #7c2d12;
+  border: 1px solid #fdba74;
+  background: linear-gradient(135deg, #ffedd5, #fb923c);
+  box-shadow: 0 10px 20px rgba(249, 115, 22, 0.18);
 }
 
 .primary-button.prestige-buy {

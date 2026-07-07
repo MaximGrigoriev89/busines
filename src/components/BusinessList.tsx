@@ -1,4 +1,4 @@
-import { Building2, Clock, Info, Lock, Tv, UserPlus } from "lucide-react";
+import { Building2, Clock, DollarSign, Info, Lock, Tv, UserPlus } from "lucide-react";
 import { businessArtForBusiness } from "../businessArt";
 import { CATEGORIES, COLLECT_TIME, MAX_BUSINESS_TIER, OPTIMIZATION_COSTS, RARITY_CLASS, RARITY_NAME } from "../data";
 import { effectiveIncome, formatMoney, isHoldingCategory, optimizationBonus, sourceCategoryIndexForHoldingBusiness } from "../game";
@@ -133,7 +133,7 @@ function BusinessCard(props: BusinessListProps & { business: Business }) {
         {business.manager ? (
           <ManagerBadge manager={business.manager} />
         ) : readyToCollect ? (
-          null
+          <CollectFrame amount={manualCollect} onCollect={() => onCollect(business.id)} />
         ) : (
           <ManagerFrame onOpenAssign={() => onOpenAssign(business.id)} />
         )}
@@ -243,6 +243,16 @@ function ManagerFrame({ onOpenAssign }: { onOpenAssign: () => void }) {
     <button className="manager-frame action" onClick={(event) => { event.stopPropagation(); onOpenAssign(); }} title="Назначить менеджера">
       <UserPlus size={20} />
       <span>Менеджер</span>
+    </button>
+  );
+}
+
+function CollectFrame({ amount, onCollect }: { amount: number; onCollect: () => void }) {
+  return (
+    <button className="manager-frame collectable collect-frame" onClick={(event) => { event.stopPropagation(); onCollect(); }} title="Собрать доход">
+      <DollarSign size={20} />
+      <span>Собрать</span>
+      <small>+${formatMoney(amount)}</small>
     </button>
   );
 }

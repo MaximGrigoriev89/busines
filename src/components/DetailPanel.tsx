@@ -225,6 +225,7 @@ function UpgradeRewardModal({ reward, onClose }: { reward: ExpansionReward & { b
 function UpgradeAction({ business, progressReady, tierGain, onExpand, onSkipExpansion }: { business: Business; progressReady: boolean; tierGain: number; onExpand: (id: number) => void; onSkipExpansion: (id: number) => void }) {
   const active = business.expansionRemaining > 0;
   const buildPct = active && business.expansionDuration > 0 ? 100 - (business.expansionRemaining / business.expansionDuration) * 100 : 0;
+  const expandState = active ? "building" : progressReady ? "ready" : "locked";
   const buttonText = active
     ? `Расширение ${formatSeconds(business.expansionRemaining)}`
     : progressReady
@@ -236,11 +237,11 @@ function UpgradeAction({ business, progressReady, tierGain, onExpand, onSkipExpa
         <strong>+${tierGain.toFixed(2)}/сек</strong>
       </div>
       {active && <div className="upgrade-build-bar"><div style={{ width: `${buildPct}%` }} /></div>}
-      <button className="primary-button expand" disabled={!progressReady || active} onClick={() => onExpand(business.id)}>
+      <button className={`primary-button expand expand-${expandState}`} disabled={!progressReady || active} onClick={() => onExpand(business.id)}>
         <Layers size={18} /> {buttonText}
       </button>
       {active && (
-        <button className="primary-button ad" onClick={() => onSkipExpansion(business.id)}>
+        <button className="primary-button ad expansion-ad-button" onClick={() => onSkipExpansion(business.id)}>
           <Tv size={18} /> Пропустить за рекламу
         </button>
       )}
