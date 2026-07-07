@@ -380,7 +380,6 @@ function BusinessOptimization({ business, hard, onOptimize, onOptimizeAd }: { bu
   const nextBusiness = canUpgrade ? { ...business, optimizationLevel: business.optimizationLevel + 1 } : business;
   const currentIncome = effectiveIncome(business);
   const nextIncome = effectiveIncome(nextBusiness);
-  const incomeGain = Math.max(0, nextIncome - currentIncome);
   const summaryTitle = canUpgrade && nextStep ? nextStep.name : currentStep?.name ?? "Базовая оптимизация";
   const summaryText = canUpgrade && nextStep ? nextStep.description : currentStep?.description ?? "Все уровни взяты.";
   return (
@@ -411,19 +410,6 @@ function BusinessOptimization({ business, hard, onOptimize, onOptimizeAd }: { bu
         </div>
       </div>
 
-      <div className="optimization-impact prestige-impact">
-        {canUpgrade && nextStep ? (
-          <>
-            <strong>Доход вырастет</strong>
-            <span>+${incomeGain.toFixed(2)}/сек к доходу · ${currentIncome.toFixed(2)} → ${nextIncome.toFixed(2)}/сек</span>
-          </>
-        ) : (
-          <>
-            <strong>Оптимизация на максимуме</strong>
-            <span>{currentStep?.description ?? "Все уровни взяты."}</span>
-          </>
-        )}
-      </div>
       <div className="optimization-actions prestige-actions">
         <button className="primary-button prestige-buy" disabled={!canUpgrade || hard < (cost ?? 0)} onClick={() => onOptimize(business.id)}>
           <Gem size={17} /> {canUpgrade ? `Улучшить · ${cost}` : "MAX"}
