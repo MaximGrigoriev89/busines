@@ -171,6 +171,14 @@ export function App() {
   }, []);
 
   useEffect(() => {
+    if (assignBusinessId == null) return;
+    const business = businesses.find((item) => item.id === assignBusinessId);
+    if (!business?.opened || business.manager) return;
+    if (managerRecruitment.candidate || managerRecruitment.searchRemaining > 0 || managerRecruitment.attempts <= 0) return;
+    handleStartManagerReroll();
+  }, [assignBusinessId, businesses, managerRecruitment.candidate, managerRecruitment.searchRemaining, managerRecruitment.attempts]);
+
+  useEffect(() => {
     const handleCheatInput = (event: KeyboardEvent) => {
       if (event.altKey || event.ctrlKey || event.metaKey) return;
       const key = getCheatKey(event);

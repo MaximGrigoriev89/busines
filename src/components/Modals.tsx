@@ -80,7 +80,7 @@ export function ManagerModal({ business, regularManager, premiumManager, hard, a
                 <div className="manager-empty-state">
                   <Search size={28} />
                   <strong>Нет кандидата</strong>
-                  <small>{attempts > 0 ? "Запусти поиск за попытку" : "Попытки закончились"}</small>
+                  <small>{attempts > 0 ? "Поиск запустится автоматически" : "Попытки закончились"}</small>
                 </div>
               )}
             </div>
