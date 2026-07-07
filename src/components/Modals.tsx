@@ -1,8 +1,8 @@
 import { Check, RefreshCw, Search, Tv, X } from "lucide-react";
-import { AD_DURATION_SECONDS, AD_HINT_SECONDS, AD_QUIZ_BONUS, MANAGER_AD_REROLL_ATTEMPTS, PREMIUM_MANAGER_COST, RARITY_CLASS, RARITY_NAME } from "../data";
+import { AD_DURATION_SECONDS, AD_HINT_SECONDS, AD_QUIZ_BONUS, MANAGER_AD_REROLL_ATTEMPTS, MANAGER_RARITY_CHANCES, PREMIUM_MANAGER_COST, RARITY_CLASS, RARITY_NAME } from "../data";
 import { formatMoney, managerSalary } from "../game";
 import type { ActiveAd, AdSource, AdStats, Business, Manager, OfflineIncome } from "../types";
-import { managerEfficiencyClass } from "./managerUi";
+import { managerEfficiencyClass, managerIncomeDeltaLabel } from "./managerUi";
 
 const AD_STAT_ROWS: Array<{ source: AdSource; label: string; note: string }> = [
   { source: "gems", label: "Гемы", note: "Кнопка в верхней панели" },
@@ -101,13 +101,29 @@ export function ManagerModal({ business, regularManager, premiumManager, hard, a
         <button className="primary-button ad manager-reroll-ad" onClick={(event) => { event.stopPropagation(); onRerollAd(); }}>
           <Tv size={18} /> Получить +{MANAGER_AD_REROLL_ATTEMPTS} попытки за рекламу
         </button>
+        <ManagerOddsTable />
+      </div>
+    </div>
+  );
+}
+
+function ManagerOddsTable() {
+  return (
+    <div className="manager-odds-table" aria-label="Вероятности редкости менеджера">
+      <div className="manager-odds-title">Шансы поиска</div>
+      <div className="manager-odds-grid">
+        {MANAGER_RARITY_CHANCES.map((item) => (
+          <div className={`manager-odds-row ${item.rarity}`} key={item.rarity}>
+            <span>{RARITY_NAME[item.rarity]}</span>
+            <strong>{Math.round(item.chance * 100)}%</strong>
+          </div>
+        ))}
       </div>
     </div>
   );
 }
 
 function ManagerOfferBody({ business, manager, title, subtitle, badge }: { business: Business | null; manager: Manager; title: string; subtitle: string; badge: string }) {
-  const trait = manager.trait || "Без особенностей";
   return (
     <>
       <div className={`portrait ${RARITY_CLASS[manager.rarity]}`}>{manager.face}</div>
@@ -117,8 +133,7 @@ function ManagerOfferBody({ business, manager, title, subtitle, badge }: { busin
           <span>{badge}</span>
         </div>
         <small>{subtitle}</small>
-        <div className="manager-trait-pill">{trait}</div>
-        <div className={`manager-offer-stat ${managerEfficiencyClass(manager)}`}>Эффективность {Math.round(manager.efficiency * 100)}%</div>
+        <div className={`manager-offer-stat ${managerEfficiencyClass(manager)}`}>Доход {managerIncomeDeltaLabel(manager)}</div>
         <div className="manager-offer-stat muted">{business ? `Зарплата $${managerSalary(business, manager).toFixed(2)}/сек` : `Зарпл. x${manager.salary.toFixed(2)}`}</div>
       </div>
     </>

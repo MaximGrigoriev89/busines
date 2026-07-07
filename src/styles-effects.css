@@ -321,6 +321,27 @@
   50% { filter: brightness(1.45); transform: translateY(-2px); }
 }
 
+@keyframes businessStarAward {
+  0% {
+    opacity: 0;
+    transform: translateY(-9px) scale(0.25) rotate(-18deg);
+    filter: drop-shadow(0 0 0 rgba(250, 204, 21, 0));
+  }
+  42% {
+    opacity: 1;
+    transform: translateY(-2px) scale(1.55) rotate(8deg);
+    filter: drop-shadow(0 0 12px rgba(250, 204, 21, 0.82));
+  }
+  72% {
+    transform: translateY(0) scale(0.92) rotate(0deg);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1) rotate(0deg);
+    filter: drop-shadow(0 0 6px rgba(250, 204, 21, 0.36));
+  }
+}
+
 .upgrade-reward-modal {
   display: grid;
   gap: 12px;

@@ -2,7 +2,7 @@ import { Gem, Search, UserMinus } from "lucide-react";
 import { useState } from "react";
 import { PREMIUM_MANAGER_COST, RARITY_CLASS, RARITY_NAME } from "../data";
 import type { Manager } from "../types";
-import { managerEfficiencyClass } from "./managerUi";
+import { managerEfficiencyClass, managerIncomeDeltaLabel } from "./managerUi";
 
 interface ManagersProps {
   managers: Array<Manager | null>;
@@ -61,7 +61,7 @@ function ManagerCard({ manager, onInfo }: { manager: Manager; onInfo: () => void
   return (
     <button className="manager-card compact-manager-card" onClick={onInfo}>
       <div className={`portrait sm ${RARITY_CLASS[manager.rarity]}`}>{manager.face}</div>
-      <strong className={managerEfficiencyClass(manager)}>{Math.round(manager.efficiency * 100)}%</strong>
+      <strong className={managerEfficiencyClass(manager)}>{managerIncomeDeltaLabel(manager)}</strong>
       <small>x{manager.salary.toFixed(2)}</small>
     </button>
   );
@@ -71,7 +71,7 @@ function PremiumManagerCard({ manager, label, onInfo }: { manager: Manager; labe
   return (
     <button className="manager-card compact-manager-card premium-manager-card" onClick={onInfo}>
       <div className={`portrait sm ${RARITY_CLASS[manager.rarity]}`}>{manager.face}</div>
-      <strong className={managerEfficiencyClass(manager)}>{Math.round(manager.efficiency * 100)}%</strong>
+      <strong className={managerEfficiencyClass(manager)}>{managerIncomeDeltaLabel(manager)}</strong>
       <small>{label}</small>
     </button>
   );
@@ -79,7 +79,6 @@ function PremiumManagerCard({ manager, label, onInfo }: { manager: Manager; labe
 
 function ManagerBenchInfo({ info, onClose, onFire }: { info: { manager: Manager; slot: number | null; premium: boolean }; onClose: () => void; onFire: () => void }) {
   const { manager, premium } = info;
-  const trait = manager.trait || "Без особенностей";
   return (
     <div className="modal-overlay">
       <div className="modal-box manager-info-modal">
@@ -90,8 +89,7 @@ function ManagerBenchInfo({ info, onClose, onFire }: { info: { manager: Manager;
         <div className="manager-info-card">
           <div className={`portrait ${RARITY_CLASS[manager.rarity]}`}>{manager.face}</div>
           <div className="min-w-0">
-            <div className="manager-trait-pill">{trait}</div>
-            <div className={`text-sm font-bold ${managerEfficiencyClass(manager)}`}>Эффективность {Math.round(manager.efficiency * 100)}%</div>
+            <div className={`text-sm font-bold ${managerEfficiencyClass(manager)}`}>Доход {managerIncomeDeltaLabel(manager)}</div>
             <div className="text-sm font-bold text-slate-500">Коэффициент зарплаты x{manager.salary.toFixed(2)}</div>
             <div className="text-xs font-bold text-slate-600">Реальная зарплата зависит от бизнеса.</div>
           </div>

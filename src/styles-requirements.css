@@ -110,6 +110,28 @@
   font-weight: 900;
 }
 
+.detail-stars-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  color: rgba(148, 163, 184, 0.42);
+}
+
+.detail-meta-star {
+  flex: 0 0 auto;
+  filter: drop-shadow(0 0 3px rgba(148, 163, 184, 0.12));
+}
+
+.detail-meta-star.filled {
+  color: #facc15;
+  filter: drop-shadow(0 0 6px rgba(250, 204, 21, 0.34));
+}
+
+.detail-stars-meta.complete .detail-meta-star.filled {
+  color: #4ade80;
+  filter: drop-shadow(0 0 6px rgba(74, 222, 128, 0.34));
+}
+
 .detail-block-body {
   display: grid;
   gap: 10px;
@@ -421,32 +443,46 @@
   background: linear-gradient(180deg, rgba(17, 46, 35, 0.85), rgba(15, 23, 42, 0.96));
 }
 
-.prestige-summary {
-  min-width: 0;
-  display: grid;
-  grid-template-columns: 42px minmax(0, 1fr) auto;
+.business-optimization.locked {
+  grid-template-columns: 42px minmax(0, 1fr);
   align-items: center;
   gap: 10px;
+  border-color: rgba(148, 163, 184, 0.32);
+  background: #111827;
+  box-shadow: none;
 }
 
-.prestige-emblem {
+.optimization-lock-icon {
   width: 42px;
   height: 42px;
   display: grid;
   place-items: center;
-  border: 1px solid rgba(250, 204, 21, 0.48);
+  border: 1px solid rgba(148, 163, 184, 0.34);
   border-radius: 8px;
-  color: #fef3c7;
-  background: radial-gradient(circle at 35% 25%, #facc15, #92400e 72%);
-  box-shadow: 0 8px 18px rgba(146, 64, 14, 0.3);
+  color: #cbd5e1;
+  background: #1e293b;
 }
 
-.prestige-summary-main {
+.optimization-lock-copy {
   min-width: 0;
+  display: grid;
+  gap: 3px;
 }
 
-.prestige-summary-main span,
-.prestige-summary-main p,
+.optimization-lock-copy strong {
+  color: #e2e8f0;
+  font-size: 14px;
+  font-weight: 950;
+  line-height: 1.1;
+}
+
+.optimization-lock-copy span {
+  color: #94a3b8;
+  font-size: 12px;
+  font-weight: 850;
+  line-height: 1.25;
+}
+
 .prestige-economy-card span,
 .prestige-economy-card small,
 .optimization-impact span {
@@ -456,39 +492,8 @@
   font-weight: 850;
 }
 
-.prestige-summary-main span,
 .prestige-economy-card span {
   text-transform: uppercase;
-}
-
-.prestige-summary-main strong {
-  display: block;
-  margin: 1px 0 3px;
-  overflow: hidden;
-  color: #fff7ed;
-  font-size: 16px;
-  font-weight: 950;
-  line-height: 1.16;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.prestige-summary-main p {
-  margin: 0;
-  color: #fde68a;
-  line-height: 1.3;
-}
-
-.prestige-level-pill {
-  min-width: 44px;
-  padding: 6px 8px;
-  border: 1px solid rgba(250, 204, 21, 0.45);
-  border-radius: 999px;
-  color: #fef3c7;
-  background: rgba(120, 53, 15, 0.72);
-  font-size: 12px;
-  font-weight: 950;
-  text-align: center;
 }
 
 .prestige-steps {
@@ -550,15 +555,6 @@
   border-color: rgba(250, 204, 21, 0.72);
   background: rgba(120, 53, 15, 0.56);
   box-shadow: inset 0 0 0 1px rgba(250, 204, 21, 0.2);
-}
-
-.prestige-progress {
-  border-color: rgba(253, 230, 138, 0.38);
-  background: rgba(15, 23, 42, 0.38);
-}
-
-.prestige-progress .group-fill {
-  background: linear-gradient(90deg, #f59e0b, #facc15, #4ade80);
 }
 
 .prestige-economy {

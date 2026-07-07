@@ -7,10 +7,17 @@ export const AD_QUIZ_BONUS = 1;
 export const AD_HINT_SECONDS = 6;
 export const AD_DURATION_SECONDS = AD_HINT_SECONDS * 5;
 export const PREMIUM_MANAGER_COST = 7;
-export const MANAGER_COOLDOWN_SECONDS = 20 * 60;
+export const MANAGER_COOLDOWN_SECONDS = 60 * 60;
 export const MANAGER_ROLL_MAX_ATTEMPTS = 3;
 export const MANAGER_AD_REROLL_ATTEMPTS = 3;
 export const MANAGER_SEARCH_SECONDS = 5;
+export const MANAGER_RARITY_CHANCES: Array<{ rarity: Rarity; chance: number }> = [
+  { rarity: "white", chance: 0.4 },
+  { rarity: "green", chance: 0.3 },
+  { rarity: "blue", chance: 0.2 },
+  { rarity: "purple", chance: 0.08 },
+  { rarity: "orange", chance: 0.02 },
+];
 export const OPTIMIZATION_COSTS = [1, 2, 4, 8, 12];
 export const OPTIMIZATION_BONUSES = [0.05, 0.08, 0.12, 0.17, 0.23];
 export const TIER_INCOME_MULTIPLIERS = [1, 2.7, 6.2];
@@ -273,12 +280,12 @@ export const RARITY_NAME: Record<Rarity, string> = {
   orange: "Легендарный",
 };
 
-export const MANAGER_RARITY_STATS: Record<Rarity, { efficiency: number; salary: number }> = {
-  white: { efficiency: 0.82, salary: 0.68 },
-  green: { efficiency: 1.02, salary: 0.98 },
-  blue: { efficiency: 1.2, salary: 1.32 },
-  purple: { efficiency: 1.52, salary: 1.98 },
-  orange: { efficiency: 2.05, salary: 2.85 },
+export const MANAGER_RARITY_STATS: Record<Rarity, { efficiency: number; efficiencySpread: number; salary: number; salarySpread: number }> = {
+  white: { efficiency: 0.62, efficiencySpread: 0.5, salary: 0.55, salarySpread: 0.36 },
+  green: { efficiency: 0.88, efficiencySpread: 0.7, salary: 0.86, salarySpread: 0.48 },
+  blue: { efficiency: 1.1, efficiencySpread: 0.76, salary: 1.18, salarySpread: 0.58 },
+  purple: { efficiency: 1.4, efficiencySpread: 0.82, salary: 1.8, salarySpread: 0.68 },
+  orange: { efficiency: 1.85, efficiencySpread: 0.9, salary: 2.55, salarySpread: 0.78 },
 };
 
 export const RARITY_CLASS: Record<Rarity, string> = {
@@ -292,25 +299,6 @@ export const RARITY_CLASS: Record<Rarity, string> = {
 export const FACES = [
   "👨‍💼", "👩‍💼", "🧔", "👩‍🦰", "🧑‍💼", "👨‍🦳", "👩‍🦱", "🧑‍🔧", "👨‍🍳", "👩‍🔬",
   "🧑‍💻", "👨‍🏫", "👩‍⚕️", "🧑‍🎨", "👨‍🚀", "👩‍🌾", "🧑‍🍳", "👨‍🔧", "👩‍💻", "🧑‍⚕️",
-];
-
-export const MANAGER_TRAITS = [
-  "Усердный",
-  "Алкаш",
-  "Курит",
-  "Нервный",
-  "Перфекционист",
-  "Жадный",
-  "Харизматичный",
-  "Сонный",
-  "Бывший бухгалтер",
-  "Микроменеджер",
-  "Любит отчеты",
-  "Суетолог",
-  "Оптимист",
-  "Торгаш",
-  "Ночной",
-  "Свой в доску",
 ];
 
 export const CATEGORIES: CategorySeed[] = [

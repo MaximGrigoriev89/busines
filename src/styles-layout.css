@@ -470,6 +470,43 @@
   gap: 5px;
 }
 
+.business-stars-progress {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  margin-top: 7px;
+}
+
+.business-star-track {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  overflow: hidden;
+}
+
+.business-star-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 1px;
+}
+
+.business-star {
+  flex: 0 0 auto;
+  color: rgba(148, 163, 184, 0.34);
+  filter: drop-shadow(0 0 3px rgba(148, 163, 184, 0.16));
+}
+
+.business-star.filled {
+  color: #facc15;
+  filter: drop-shadow(0 0 6px rgba(250, 204, 21, 0.36));
+}
+
+.business-star.awarded {
+  transform-origin: center;
+  animation: businessStarAward 0.86s cubic-bezier(0.2, 0.9, 0.2, 1.15) both;
+}
+
 .business-card-meta {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
@@ -641,6 +678,12 @@
   background: #123322;
 }
 
+.merger-panel.locked .merger-state {
+  color: #cbd5e1;
+  border-color: rgba(148, 163, 184, 0.38);
+  background: #1e293b;
+}
+
 .merger-panel.merged .merger-state {
   color: #fef3c7;
   border-color: rgba(250, 204, 21, 0.55);
@@ -654,6 +697,10 @@
   gap: 10px;
 }
 
+.merger-panel.locked .merger-main-row {
+  grid-template-columns: 42px minmax(0, 1fr);
+}
+
 .merger-emblem {
   position: relative;
   width: 42px;
@@ -665,6 +712,12 @@
   border-radius: 8px;
   color: #fef3c7;
   background: #2d2411;
+}
+
+.merger-panel.locked .merger-emblem {
+  color: #cbd5e1;
+  border-color: rgba(148, 163, 184, 0.36);
+  background: #172033;
 }
 
 .holding-income-stream {
@@ -737,6 +790,13 @@
   background: #101628;
   font-size: 11px;
   font-weight: 900;
+}
+
+.merger-panel.locked .merger-action {
+  color: #cbd5e1;
+  border-color: rgba(148, 163, 184, 0.36);
+  background: #172033;
+  opacity: 1;
 }
 
 .merger-panel.ready .merger-action {

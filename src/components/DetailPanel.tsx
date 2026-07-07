@@ -1,4 +1,4 @@
-import { ArrowLeft, Check, Clock, Gem, Layers, PackageCheck, Rocket, Timer, TrendingUp, Trophy, Tv, UserMinus, UserPlus, X } from "lucide-react";
+import { ArrowLeft, Check, Clock, Gem, Layers, LockKeyhole, PackageCheck, Rocket, Star, Timer, TrendingUp, Tv, UserMinus, UserPlus, X } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { businessArtForBusiness } from "../businessArt";
 import { businessTierVisualForTier } from "../businessTierVisual";
@@ -6,7 +6,7 @@ import { EQUIPMENT_OPTIONS, LONG_ACTION_OPTIONS, MAX_BUSINESS_TIER, OPTIMIZATION
 import { effectiveIncome, expansionProgress, isRequirementDone, managerSalary, nextOptimizationBonus, nextOptimizationCost, optimizationBonus } from "../game";
 import type { Business, ExpansionRequirement, ExpansionReward } from "../types";
 import { BusinessLevelStars } from "./BusinessLevelStars";
-import { managerEfficiencyClass } from "./managerUi";
+import { managerEfficiencyClass, managerIncomeDeltaLabel } from "./managerUi";
 
 interface DetailPanelProps {
   business: Business | null;
@@ -56,6 +56,7 @@ export function DetailPanel(props: DetailPanelProps) {
   const tierGain = Math.max(0, nextIncome - income);
   const equipmentMatch = business.requirements.find((req) => req.id === equipmentReqId);
   const equipmentReq = equipmentMatch?.type === "equipment" ? equipmentMatch : null;
+  const optimizationUnlocked = business.tier >= MAX_BUSINESS_TIER;
 
   return (
     <section className="detail-panel business-page">
@@ -66,7 +67,7 @@ export function DetailPanel(props: DetailPanelProps) {
         <BusinessShowcase business={business} income={income} />
         <BusinessInfo business={business} onHire={() => onOpenAssign(business.id)} onInfo={() => setManagerInfoOpen(true)} />
       </DetailBlock>
-      <DetailBlock title="Расширение" meta={expansionComplete ? "MAX" : `${progress.done}/${progress.total}`}>
+      <DetailBlock title="Расширение" meta={<DetailStarsMeta value={Math.min(MAX_BUSINESS_TIER, business.tier)} total={MAX_BUSINESS_TIER} done={expansionComplete} label="Звезды расширения" />}>
         {!expansionComplete ? (
           <>
           <div className="requirement-list">
@@ -96,8 +97,12 @@ export function DetailPanel(props: DetailPanelProps) {
           <div className="expansion-complete">Бизнес полностью расширен.</div>
         )}
       </DetailBlock>
-      <DetailBlock title="Оптимизация дохода" meta={`${business.optimizationLevel}/${OPTIMIZATION_COSTS.length}`} className="prestige-detail-block">
-        <BusinessOptimization business={business} hard={hard} onOptimize={onOptimize} onOptimizeAd={onOptimizeAd} />
+      <DetailBlock title="Оптимизация дохода" meta={optimizationUnlocked ? <DetailStarsMeta value={business.optimizationLevel} total={OPTIMIZATION_COSTS.length} done={business.optimizationLevel >= OPTIMIZATION_COSTS.length} label="Звезды оптимизации" /> : "Ур. 3"} className="prestige-detail-block">
+        {optimizationUnlocked ? (
+          <BusinessOptimization business={business} hard={hard} onOptimize={onOptimize} onOptimizeAd={onOptimizeAd} />
+        ) : (
+          <OptimizationLocked />
+        )}
       </DetailBlock>
       {managerInfoOpen && business.manager && (
         <ManagerInfoModal
@@ -136,7 +141,7 @@ function BusinessShowcase({ business, income }: { business: Business; income: nu
   );
 }
 
-function DetailBlock({ title, meta, children, className = "", hideHeader = false }: { title: string; meta: string; children: ReactNode; className?: string; hideHeader?: boolean }) {
+function DetailBlock({ title, meta, children, className = "", hideHeader = false }: { title: string; meta: ReactNode; children: ReactNode; className?: string; hideHeader?: boolean }) {
   return (
     <section className={`detail-block ${className}`.trim()}>
       {!hideHeader && (
@@ -152,8 +157,30 @@ function DetailBlock({ title, meta, children, className = "", hideHeader = false
   );
 }
 
+function DetailStarsMeta({ value, total, done, label }: { value: number; total: number; done?: boolean; label: string }) {
+  const filled = Math.max(0, Math.min(total, value));
+  return (
+    <span className={`detail-stars-meta ${done ? "complete" : ""}`} aria-label={`${label}: ${filled} из ${total}`}>
+      {Array.from({ length: total }, (_, index) => (
+        <Star className={`detail-meta-star ${index < filled ? "filled" : ""}`} fill="currentColor" size={12} key={index} />
+      ))}
+    </span>
+  );
+}
+
+function OptimizationLocked() {
+  return (
+    <div className="business-optimization locked">
+      <div className="optimization-lock-icon"><LockKeyhole size={22} /></div>
+      <div className="optimization-lock-copy">
+        <strong>Оптимизация закрыта</strong>
+        <span>Откроется на 3 уровне бизнеса.</span>
+      </div>
+    </div>
+  );
+}
+
 function BusinessInfo({ business, onHire, onInfo }: { business: Business; onHire: () => void; onInfo: () => void }) {
-  const managerTrait = business.manager?.trait || "Без особенностей";
   if (!business.manager) {
     return (
       <button className="business-manager-row empty manager-action-row" onClick={onHire}>
@@ -170,8 +197,7 @@ function BusinessInfo({ business, onHire, onInfo }: { business: Business; onHire
       <div className={`portrait sm ${RARITY_CLASS[business.manager.rarity]}`}>{business.manager.face}</div>
       <div className="min-w-0">
         <div className="text-sm font-black">{RARITY_NAME[business.manager.rarity]} менеджер</div>
-        <div className="manager-trait-pill compact">{managerTrait}</div>
-        <div className={`text-xs font-bold ${managerEfficiencyClass(business.manager)}`}>Эффективность {Math.round(business.manager.efficiency * 100)}%</div>
+        <div className={`text-xs font-bold ${managerEfficiencyClass(business.manager)}`}>Доход {managerIncomeDeltaLabel(business.manager)}</div>
         <div className="text-xs font-bold text-slate-500">Зарплата ${managerSalary(business, business.manager).toFixed(2)}/сек</div>
       </div>
     </button>
@@ -181,7 +207,6 @@ function BusinessInfo({ business, onHire, onInfo }: { business: Business; onHire
 function ManagerInfoModal({ business, onClose, onFire }: { business: Business; onClose: () => void; onFire: () => void }) {
   if (!business.manager) return null;
   const income = effectiveIncome(business);
-  const managerTrait = business.manager.trait || "Без особенностей";
   return (
     <div className="modal-overlay">
       <div className="modal-box manager-info-modal">
@@ -193,8 +218,7 @@ function ManagerInfoModal({ business, onClose, onFire }: { business: Business; o
           <div className={`portrait ${RARITY_CLASS[business.manager.rarity]}`}>{business.manager.face}</div>
           <div className="min-w-0">
             <div className="text-base font-black">{RARITY_NAME[business.manager.rarity]}</div>
-            <div className="manager-trait-pill">{managerTrait}</div>
-            <div className={`text-sm font-bold ${managerEfficiencyClass(business.manager)}`}>Эффективность {Math.round(business.manager.efficiency * 100)}%</div>
+            <div className={`text-sm font-bold ${managerEfficiencyClass(business.manager)}`}>Доход {managerIncomeDeltaLabel(business.manager)}</div>
             <div className="text-sm font-bold text-slate-500">Зарплата ${managerSalary(business, business.manager).toFixed(2)}/сек</div>
             <div className="text-sm font-bold text-emerald-300">Доход бизнеса ${income.toFixed(2)}/сек</div>
           </div>
@@ -353,7 +377,6 @@ function EquipmentPicker({ business, req, soft, onBuyEquipment, onClose }: { bus
 
 function BusinessOptimization({ business, hard, onOptimize, onOptimizeAd }: { business: Business; hard: number; onOptimize: (id: number) => void; onOptimizeAd: (id: number) => void }) {
   const cost = nextOptimizationCost(business.optimizationLevel);
-  const pct = (business.optimizationLevel / OPTIMIZATION_COSTS.length) * 100;
   const canUpgrade = cost != null;
   const optimizationMap = (
     <>
@@ -370,8 +393,6 @@ function BusinessOptimization({ business, hard, onOptimize, onOptimizeAd }: { bu
           );
         })}
       </div>
-
-      <div className="progress-track prestige-progress"><div className="group-fill" style={{ width: `${pct}%` }} /></div>
     </>
   );
 
@@ -381,25 +402,11 @@ function BusinessOptimization({ business, hard, onOptimize, onOptimizeAd }: { bu
 
   const nextBonus = nextOptimizationBonus(business.optimizationLevel);
   const currentBonus = optimizationBonus(business.optimizationLevel);
-  const currentStep = business.optimizationLevel > 0 ? OPTIMIZATION_STEPS[business.optimizationLevel - 1] : null;
-  const nextStep = OPTIMIZATION_STEPS[business.optimizationLevel] ?? null;
   const nextBusiness = canUpgrade ? { ...business, optimizationLevel: business.optimizationLevel + 1 } : business;
   const currentIncome = effectiveIncome(business);
   const nextIncome = effectiveIncome(nextBusiness);
-  const summaryTitle = canUpgrade && nextStep ? nextStep.name : currentStep?.name ?? "Базовая оптимизация";
-  const summaryText = canUpgrade && nextStep ? nextStep.description : currentStep?.description ?? "Все уровни взяты.";
   return (
     <div className={`business-optimization ${canUpgrade ? "" : "complete"}`}>
-      <div className="prestige-summary">
-        <div className="prestige-emblem"><Trophy size={20} /></div>
-        <div className="prestige-summary-main">
-          <span>{canUpgrade ? "Следующий шаг оптимизации" : "Оптимизация завершена"}</span>
-          <strong>{summaryTitle}</strong>
-          <p>{summaryText}</p>
-        </div>
-        <div className="prestige-level-pill">{business.optimizationLevel}/{OPTIMIZATION_COSTS.length}</div>
-      </div>
-
       {optimizationMap}
 
       <div className="prestige-economy">

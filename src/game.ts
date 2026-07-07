@@ -1,4 +1,4 @@
-import { CATEGORIES, COLLECT_TIME, EQUIPMENT_OPTIONS, EXPANSION_BALANCE, FACES, LONG_ACTION_OPTIONS, MANAGER_RARITY_STATS, MANAGER_TRAITS, MAX_BUSINESS_TIER, OPTIMIZATION_BONUSES, OPTIMIZATION_COSTS, TIER_INCOME_MULTIPLIERS } from "./data";
+import { CATEGORIES, COLLECT_TIME, EQUIPMENT_OPTIONS, EXPANSION_BALANCE, FACES, LONG_ACTION_OPTIONS, MANAGER_RARITY_CHANCES, MANAGER_RARITY_STATS, MAX_BUSINESS_TIER, OPTIMIZATION_BONUSES, OPTIMIZATION_COSTS, TIER_INCOME_MULTIPLIERS } from "./data";
 import type { Business, ExpansionRequirement, Manager } from "./types";
 
 export const HOLDING_GLOBAL_INCOME_BONUS = 3;
@@ -96,35 +96,41 @@ export function createPremiumManager(seed: number): Manager {
     ...manager,
     efficiency,
     salary,
-    desc: `${manager.trait} · прем · эфф. ${Math.round(efficiency * 100)}% · зарпл. x${salary.toFixed(2)}`,
+    desc: `Доход ${formatManagerIncomeDelta(efficiency)} · зарпл. x${salary.toFixed(2)}`,
   };
 }
 
 function makeManager(seed: number, rarity: Manager["rarity"]): Manager {
   const face = FACES[seed % FACES.length];
-  const trait = MANAGER_TRAITS[(seed * 31 + rarity.length) % MANAGER_TRAITS.length];
   const base = MANAGER_RARITY_STATS[rarity];
-  const spread = ((seed * 17) % 9) / 100;
-  const efficiency = round2(base.efficiency + spread);
-  const salary = round2(base.salary + spread * 1.8);
+  const efficiencyRoll = seededRoll(seed + 137);
+  const salaryRoll = seededRoll(seed + 271);
+  const efficiency = round2(Math.max(0.25, base.efficiency + (efficiencyRoll - 0.5) * base.efficiencySpread));
+  const salary = round2(Math.max(0.25, base.salary + (salaryRoll - 0.45) * base.salarySpread));
   return {
     id: seed,
     face,
     rarity,
-    trait,
+    trait: "",
     efficiency,
     salary,
-    desc: `${trait} · эфф. ${Math.round(efficiency * 100)}% · зарпл. x${salary.toFixed(2)}`,
+    desc: `Доход ${formatManagerIncomeDelta(efficiency)} · зарпл. x${salary.toFixed(2)}`,
   };
+}
+
+function formatManagerIncomeDelta(efficiency: number): string {
+  const delta = Math.round((efficiency - 1) * 100);
+  return `${delta >= 0 ? "+" : ""}${delta}%`;
 }
 
 function rollManagerRarity(seed: number): Manager["rarity"] {
   const roll = seededRoll(seed);
-  if (roll < 0.28) return "white";
-  if (roll < 0.62) return "green";
-  if (roll < 0.86) return "blue";
-  if (roll < 0.97) return "purple";
-  return "orange";
+  let cumulative = 0;
+  for (const item of MANAGER_RARITY_CHANCES) {
+    cumulative += item.chance;
+    if (roll < cumulative) return item.rarity;
+  }
+  return MANAGER_RARITY_CHANCES[MANAGER_RARITY_CHANCES.length - 1]?.rarity ?? "white";
 }
 
 function seededRoll(seed: number): number {
@@ -197,6 +203,8 @@ export function isBusinessReadyForMerger(business: Business): boolean {
 
 export function categoryMergerStatus(businesses: Business[], categoryIndex: number) {
   const group = businesses.filter((business) => business.catIdx === categoryIndex);
+  const opened = group.filter((business) => business.opened).length;
+  const allOpened = group.length > 0 && opened === group.length;
   const eligible = group.filter(isBusinessReadyForMerger).length;
   const merged = group.length > 0 && group.every((business) => business.mergedIntoHolding);
   const levelDone = group.reduce((sum, business) => sum + (business.opened ? Math.min(MAX_BUSINESS_TIER, business.tier) : 0), 0);
@@ -205,8 +213,23 @@ export function categoryMergerStatus(businesses: Business[], categoryIndex: numb
   const optimizationTotal = group.length * OPTIMIZATION_COSTS.length;
   const starsDone = levelDone + optimizationDone;
   const starsTotal = levelTotal + optimizationTotal;
+  const mergedPreview = businesses.map((business) => (
+    business.catIdx === categoryIndex
+      ? {
+        ...business,
+        mergedIntoHolding: true,
+        collectTimer: 0,
+        collectReady: false,
+        expansionRemaining: 0,
+        expansionDuration: 0,
+      }
+      : business
+  ));
+  const incomeGain = merged ? 0 : Math.max(0, totalAutoIncomePerSecond(mergedPreview) - totalAutoIncomePerSecond(businesses));
   return {
     total: group.length,
+    opened,
+    allOpened,
     eligible,
     ready: group.length > 0 && eligible === group.length,
     merged,
@@ -217,6 +240,7 @@ export function categoryMergerStatus(businesses: Business[], categoryIndex: numb
     starsDone,
     starsTotal,
     holdingIncome: merged ? holdingIncomeForCategory(group) : 0,
+    incomeGain,
   };
 }
 

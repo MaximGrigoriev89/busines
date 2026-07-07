@@ -46,17 +46,6 @@
   -webkit-line-clamp: 2;
 }
 
-.manager-card-trait {
-  width: 100%;
-  overflow: hidden;
-  color: #facc15;
-  font-size: 8px;
-  font-weight: 950;
-  line-height: 1.05;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
 .manager-badge-text .text-sm {
   font-size: 9px;
   line-height: 1.1;
@@ -671,29 +660,6 @@
   line-height: 1.25;
 }
 
-.manager-trait-pill {
-  width: fit-content;
-  max-width: 100%;
-  overflow: hidden;
-  margin: 4px 0 2px;
-  padding: 4px 7px;
-  border: 1px solid rgba(250, 204, 21, 0.4);
-  border-radius: 999px;
-  color: #fef3c7;
-  background: rgba(120, 53, 15, 0.52);
-  font-size: 11px;
-  font-weight: 950;
-  line-height: 1;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.manager-trait-pill.compact {
-  margin-top: 3px;
-  padding: 3px 6px;
-  font-size: 10px;
-}
-
 .manager-offer-stat.muted {
   color: #94a3b8;
 }
@@ -790,6 +756,59 @@
   color: #94a3b8;
   background: #f8fafc;
 }
+
+.manager-odds-table {
+  margin-top: 10px;
+  padding: 9px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #f8fafc;
+}
+
+.manager-odds-title {
+  margin-bottom: 6px;
+  color: #64748b;
+  font-size: 10px;
+  font-weight: 950;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.manager-odds-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 5px 8px;
+}
+
+.manager-odds-row {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  color: #64748b;
+  font-size: 10px;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.manager-odds-row span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.manager-odds-row strong {
+  flex: 0 0 auto;
+  font-weight: 950;
+}
+
+.manager-odds-row.white strong { color: #64748b; }
+.manager-odds-row.green strong { color: #059669; }
+.manager-odds-row.blue strong { color: #0284c7; }
+.manager-odds-row.purple strong { color: #7c3aed; }
+.manager-odds-row.orange strong { color: #d97706; }
 
 .manager-reroll-ad {
   margin-top: 10px;

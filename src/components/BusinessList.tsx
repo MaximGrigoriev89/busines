@@ -1,9 +1,9 @@
-import { Building2, Clock, DollarSign, Info, Lock, Tv, UserPlus } from "lucide-react";
+import { Building2, Clock, DollarSign, Info, Lock, Star, Tv, UserPlus } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { businessArtForBusiness } from "../businessArt";
 import { CATEGORIES, COLLECT_TIME, MAX_BUSINESS_TIER, OPTIMIZATION_COSTS, RARITY_CLASS, RARITY_NAME } from "../data";
-import { effectiveIncome, formatMoney, isHoldingCategory, optimizationBonus, sourceCategoryIndexForHoldingBusiness } from "../game";
+import { effectiveIncome, formatMoney, isHoldingCategory, sourceCategoryIndexForHoldingBusiness } from "../game";
 import { businessNotifications } from "../notifications";
-import { BusinessLevelStars } from "./BusinessLevelStars";
 import type { BusinessNotification } from "../notifications";
 import type { Business, Manager } from "../types";
 
@@ -36,7 +36,6 @@ export function BusinessList(props: BusinessListProps) {
       <div className="business-list-head">
         <div className="business-list-title">
           <div className="section-title">{title}</div>
-          <CategoryStarProgress businesses={items} />
         </div>
       </div>
       <div className="business-list">
@@ -45,38 +44,6 @@ export function BusinessList(props: BusinessListProps) {
         ))}
       </div>
     </section>
-  );
-}
-
-function CategoryStarProgress({ businesses }: { businesses: Business[] }) {
-  const maxBusinessLevels = MAX_BUSINESS_TIER;
-  const maxOptimizationLevels = OPTIMIZATION_COSTS.length;
-  const levelDone = businesses.reduce((sum, business) => sum + (business.opened ? Math.min(maxBusinessLevels, business.tier) : 0), 0);
-  const optimizationDone = businesses.reduce((sum, business) => sum + (business.opened ? business.optimizationLevel : 0), 0);
-  return (
-    <div className="category-star-progress" aria-label={`Прогресс категории: уровни ${levelDone}, оптимизация ${optimizationDone}`}>
-      <StarProgressRow label="Уровни" businesses={businesses} max={maxBusinessLevels} value={(business) => (business.opened ? business.tier : 0)} />
-      <StarProgressRow label="Оптимизация" businesses={businesses} max={maxOptimizationLevels} value={(business) => (business.opened ? business.optimizationLevel : 0)} />
-    </div>
-  );
-}
-
-function StarProgressRow({ label, businesses, max, value }: { label: string; businesses: Business[]; max: number; value: (business: Business) => number }) {
-  return (
-    <div className="category-star-row">
-      <span>{label}</span>
-      <div className="category-star-groups">
-        {businesses.map((business) => (
-          <div className="category-star-group" key={business.id} title={business.name}>
-            {Array.from({ length: max }, (_, index) => (
-              <span className={index < value(business) ? "category-star filled" : "category-star"} key={index}>
-                {index < value(business) ? "★" : "☆"}
-              </span>
-            ))}
-          </div>
-        ))}
-      </div>
-    </div>
   );
 }
 
@@ -91,9 +58,6 @@ function BusinessCard(props: BusinessListProps & { business: Business }) {
   const merged = business.mergedIntoHolding;
   const bursts = incomeBursts.filter((burst) => burst.businessId === business.id);
   const readyToCollect = !merged && !business.manager && business.collectReady;
-  const statusClass = merged ? "merged" : business.manager ? "auto" : readyToCollect ? "ready" : "manual";
-  const statusText = merged ? "Холдинг" : business.manager ? "Авто" : readyToCollect ? "Готово" : "Ручной";
-  const optBonus = optimizationBonus(business.optimizationLevel);
   const notifications = businessNotifications(business, soft);
   const art = businessArtForBusiness(business);
   const handleCardClick = () => {
@@ -114,15 +78,13 @@ function BusinessCard(props: BusinessListProps & { business: Business }) {
         <div className="business-card-head">
           <h3 className="business-card-title">{business.name}</h3>
           <div className="business-card-badges">
-            <BusinessLevelStars level={business.tier} compact />
-            {!readyToCollect && <span className={`status-pill ${statusClass}`}>{statusText}</span>}
-            {!merged && optBonus > 0 && <span className="optimization-badge">+{Math.round(optBonus * 100)}%</span>}
+            {merged && <span className="status-pill merged">Холдинг</span>}
           </div>
         </div>
+        <BusinessStarProgress business={business} />
         {!merged && (
           <div className="business-card-meta">
             <span>
-              <small>Доход</small>
               <strong>${income.toFixed(1)}/сек</strong>
             </span>
           </div>
@@ -151,6 +113,53 @@ function BusinessCard(props: BusinessListProps & { business: Business }) {
       <IncomeBursts bursts={bursts} />
     </article>
   );
+}
+
+function BusinessStarProgress({ business }: { business: Business }) {
+  const levelDone = Math.min(MAX_BUSINESS_TIER, business.tier);
+  const optimizationDone = Math.min(OPTIMIZATION_COSTS.length, business.optimizationLevel);
+  const done = levelDone + optimizationDone;
+  const total = MAX_BUSINESS_TIER + OPTIMIZATION_COSTS.length;
+  const previous = useRef({ levelDone, optimizationDone });
+  const [awardedStars, setAwardedStars] = useState<{ level: number[]; optimization: number[] }>({ level: [], optimization: [] });
+
+  useEffect(() => {
+    const addedLevel = indexesBetween(previous.current.levelDone, levelDone);
+    const addedOptimization = indexesBetween(previous.current.optimizationDone, optimizationDone);
+    previous.current = { levelDone, optimizationDone };
+
+    if (addedLevel.length === 0 && addedOptimization.length === 0) return;
+
+    setAwardedStars({ level: addedLevel, optimization: addedOptimization });
+    const timeout = window.setTimeout(() => {
+      setAwardedStars({ level: [], optimization: [] });
+    }, 900);
+    return () => window.clearTimeout(timeout);
+  }, [levelDone, optimizationDone]);
+
+  return (
+    <div className="business-stars-progress" aria-label={`Звезды бизнеса ${done} из ${total}`}>
+      <div className="business-star-track">
+        <BusinessStarGroup total={MAX_BUSINESS_TIER} filled={levelDone} label="Уровни" awarded={awardedStars.level} />
+        <BusinessStarGroup total={OPTIMIZATION_COSTS.length} filled={optimizationDone} label="Оптимизация" awarded={awardedStars.optimization} />
+      </div>
+    </div>
+  );
+}
+
+function BusinessStarGroup({ total, filled, label, awarded }: { total: number; filled: number; label: string; awarded: number[] }) {
+  return (
+    <div className="business-star-group" title={`${label}: ${filled}/${total}`}>
+      {Array.from({ length: total }, (_, index) => (
+        <Star className={`business-star ${index < filled ? "filled" : ""} ${awarded.includes(index) ? "awarded" : ""}`} fill="currentColor" size={11} key={index} />
+      ))}
+    </div>
+  );
+}
+
+function indexesBetween(from: number, to: number): number[] {
+  if (to <= from) return [];
+  return Array.from({ length: to - from }, (_, index) => from + index);
 }
 
 function LockedBusinessCard({ business, soft, onOpenBusiness, onSkipUnlock }: { business: Business; soft: number; onOpenBusiness: (id: number) => void; onSkipUnlock: (id: number) => void }) {
@@ -258,13 +267,11 @@ function CollectFrame({ amount, onCollect }: { amount: number; onCollect: () => 
 }
 
 function ManagerBadge({ manager }: { manager: Manager }) {
-  const trait = manager.trait || "Без особенностей";
   return (
     <div className="manager-badge">
       <div className={`portrait sm ${RARITY_CLASS[manager.rarity]}`}>{manager.face}</div>
       <div className="manager-badge-text">
         <div className="manager-card-name">{RARITY_NAME[manager.rarity]}</div>
-        <div className="manager-card-trait">{trait}</div>
       </div>
     </div>
   );
