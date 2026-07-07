@@ -1,4 +1,4 @@
-import { CATEGORIES, COLLECT_TIME, EQUIPMENT_OPTIONS, EXPANSION_BALANCE, FACES, LONG_ACTION_OPTIONS, MANAGER_RARITY_STATS, MAX_BUSINESS_TIER, OPTIMIZATION_BONUSES, OPTIMIZATION_COSTS, TIER_INCOME_MULTIPLIERS } from "./data";
+import { CATEGORIES, COLLECT_TIME, EQUIPMENT_OPTIONS, EXPANSION_BALANCE, FACES, LONG_ACTION_OPTIONS, MANAGER_RARITY_STATS, MANAGER_TRAITS, MAX_BUSINESS_TIER, OPTIMIZATION_BONUSES, OPTIMIZATION_COSTS, TIER_INCOME_MULTIPLIERS } from "./data";
 import type { Business, ExpansionRequirement, Manager } from "./types";
 
 export const HOLDING_GLOBAL_INCOME_BONUS = 3;
@@ -96,12 +96,13 @@ export function createPremiumManager(seed: number): Manager {
     ...manager,
     efficiency,
     salary,
-    desc: `Прем · эфф. ${Math.round(efficiency * 100)}% · зарпл. x${salary.toFixed(2)}`,
+    desc: `${manager.trait} · прем · эфф. ${Math.round(efficiency * 100)}% · зарпл. x${salary.toFixed(2)}`,
   };
 }
 
 function makeManager(seed: number, rarity: Manager["rarity"]): Manager {
   const face = FACES[seed % FACES.length];
+  const trait = MANAGER_TRAITS[(seed * 31 + rarity.length) % MANAGER_TRAITS.length];
   const base = MANAGER_RARITY_STATS[rarity];
   const spread = ((seed * 17) % 9) / 100;
   const efficiency = round2(base.efficiency + spread);
@@ -110,18 +111,19 @@ function makeManager(seed: number, rarity: Manager["rarity"]): Manager {
     id: seed,
     face,
     rarity,
+    trait,
     efficiency,
     salary,
-    desc: `Эфф. ${Math.round(efficiency * 100)}% · зарпл. x${salary.toFixed(2)}`,
+    desc: `${trait} · эфф. ${Math.round(efficiency * 100)}% · зарпл. x${salary.toFixed(2)}`,
   };
 }
 
 function rollManagerRarity(seed: number): Manager["rarity"] {
   const roll = seededRoll(seed);
-  if (roll < 0.42) return "white";
-  if (roll < 0.68) return "green";
-  if (roll < 0.88) return "blue";
-  if (roll < 0.975) return "purple";
+  if (roll < 0.28) return "white";
+  if (roll < 0.62) return "green";
+  if (roll < 0.86) return "blue";
+  if (roll < 0.97) return "purple";
   return "orange";
 }
 

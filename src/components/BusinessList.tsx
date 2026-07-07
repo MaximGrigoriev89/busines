@@ -258,11 +258,13 @@ function CollectFrame({ amount, onCollect }: { amount: number; onCollect: () => 
 }
 
 function ManagerBadge({ manager }: { manager: Manager }) {
+  const trait = manager.trait || "Без особенностей";
   return (
     <div className="manager-badge">
       <div className={`portrait sm ${RARITY_CLASS[manager.rarity]}`}>{manager.face}</div>
       <div className="manager-badge-text">
         <div className="manager-card-name">{RARITY_NAME[manager.rarity]}</div>
+        <div className="manager-card-trait">{trait}</div>
       </div>
     </div>
   );

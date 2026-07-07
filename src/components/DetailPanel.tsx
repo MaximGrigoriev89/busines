@@ -153,6 +153,7 @@ function DetailBlock({ title, meta, children, className = "", hideHeader = false
 }
 
 function BusinessInfo({ business, onHire, onInfo }: { business: Business; onHire: () => void; onInfo: () => void }) {
+  const managerTrait = business.manager?.trait || "Без особенностей";
   if (!business.manager) {
     return (
       <button className="business-manager-row empty manager-action-row" onClick={onHire}>
@@ -169,6 +170,7 @@ function BusinessInfo({ business, onHire, onInfo }: { business: Business; onHire
       <div className={`portrait sm ${RARITY_CLASS[business.manager.rarity]}`}>{business.manager.face}</div>
       <div className="min-w-0">
         <div className="text-sm font-black">{RARITY_NAME[business.manager.rarity]} менеджер</div>
+        <div className="manager-trait-pill compact">{managerTrait}</div>
         <div className={`text-xs font-bold ${managerEfficiencyClass(business.manager)}`}>Эффективность {Math.round(business.manager.efficiency * 100)}%</div>
         <div className="text-xs font-bold text-slate-500">Зарплата ${managerSalary(business, business.manager).toFixed(2)}/сек</div>
       </div>
@@ -179,6 +181,7 @@ function BusinessInfo({ business, onHire, onInfo }: { business: Business; onHire
 function ManagerInfoModal({ business, onClose, onFire }: { business: Business; onClose: () => void; onFire: () => void }) {
   if (!business.manager) return null;
   const income = effectiveIncome(business);
+  const managerTrait = business.manager.trait || "Без особенностей";
   return (
     <div className="modal-overlay">
       <div className="modal-box manager-info-modal">
@@ -190,6 +193,7 @@ function ManagerInfoModal({ business, onClose, onFire }: { business: Business; o
           <div className={`portrait ${RARITY_CLASS[business.manager.rarity]}`}>{business.manager.face}</div>
           <div className="min-w-0">
             <div className="text-base font-black">{RARITY_NAME[business.manager.rarity]}</div>
+            <div className="manager-trait-pill">{managerTrait}</div>
             <div className={`text-sm font-bold ${managerEfficiencyClass(business.manager)}`}>Эффективность {Math.round(business.manager.efficiency * 100)}%</div>
             <div className="text-sm font-bold text-slate-500">Зарплата ${managerSalary(business, business.manager).toFixed(2)}/сек</div>
             <div className="text-sm font-bold text-emerald-300">Доход бизнеса ${income.toFixed(2)}/сек</div>

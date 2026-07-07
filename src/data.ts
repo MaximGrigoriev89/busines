@@ -274,11 +274,11 @@ export const RARITY_NAME: Record<Rarity, string> = {
 };
 
 export const MANAGER_RARITY_STATS: Record<Rarity, { efficiency: number; salary: number }> = {
-  white: { efficiency: 0.68, salary: 0.7 },
-  green: { efficiency: 0.88, salary: 0.95 },
-  blue: { efficiency: 1.12, salary: 1.35 },
-  purple: { efficiency: 1.42, salary: 2.05 },
-  orange: { efficiency: 1.9, salary: 3 },
+  white: { efficiency: 0.82, salary: 0.68 },
+  green: { efficiency: 1.02, salary: 0.98 },
+  blue: { efficiency: 1.2, salary: 1.32 },
+  purple: { efficiency: 1.52, salary: 1.98 },
+  orange: { efficiency: 2.05, salary: 2.85 },
 };
 
 export const RARITY_CLASS: Record<Rarity, string> = {
@@ -292,6 +292,25 @@ export const RARITY_CLASS: Record<Rarity, string> = {
 export const FACES = [
   "👨‍💼", "👩‍💼", "🧔", "👩‍🦰", "🧑‍💼", "👨‍🦳", "👩‍🦱", "🧑‍🔧", "👨‍🍳", "👩‍🔬",
   "🧑‍💻", "👨‍🏫", "👩‍⚕️", "🧑‍🎨", "👨‍🚀", "👩‍🌾", "🧑‍🍳", "👨‍🔧", "👩‍💻", "🧑‍⚕️",
+];
+
+export const MANAGER_TRAITS = [
+  "Усердный",
+  "Алкаш",
+  "Курит",
+  "Нервный",
+  "Перфекционист",
+  "Жадный",
+  "Харизматичный",
+  "Сонный",
+  "Бывший бухгалтер",
+  "Микроменеджер",
+  "Любит отчеты",
+  "Суетолог",
+  "Оптимист",
+  "Торгаш",
+  "Ночной",
+  "Свой в доску",
 ];
 
 export const CATEGORIES: CategorySeed[] = [

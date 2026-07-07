@@ -107,6 +107,7 @@ export function ManagerModal({ business, regularManager, premiumManager, hard, a
 }
 
 function ManagerOfferBody({ business, manager, title, subtitle, badge }: { business: Business | null; manager: Manager; title: string; subtitle: string; badge: string }) {
+  const trait = manager.trait || "Без особенностей";
   return (
     <>
       <div className={`portrait ${RARITY_CLASS[manager.rarity]}`}>{manager.face}</div>
@@ -116,6 +117,7 @@ function ManagerOfferBody({ business, manager, title, subtitle, badge }: { busin
           <span>{badge}</span>
         </div>
         <small>{subtitle}</small>
+        <div className="manager-trait-pill">{trait}</div>
         <div className={`manager-offer-stat ${managerEfficiencyClass(manager)}`}>Эффективность {Math.round(manager.efficiency * 100)}%</div>
         <div className="manager-offer-stat muted">{business ? `Зарплата $${managerSalary(business, manager).toFixed(2)}/сек` : `Зарпл. x${manager.salary.toFixed(2)}`}</div>
       </div>

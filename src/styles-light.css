@@ -117,6 +117,7 @@ button {
 .goal-caption,
 .category-star-row > span,
 .compact-manager-card small,
+.manager-card-trait,
 .locked-business-line,
 .category-label,
 .detail-block-head em,
@@ -1001,4 +1002,10 @@ button:disabled {
 .manager-efficiency.bad,
 .text-red-300 {
   color: var(--red) !important;
+}
+
+.manager-trait-pill {
+  border-color: #f3c76a;
+  color: #7c2d12;
+  background: #fff7ed;
 }

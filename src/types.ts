@@ -4,6 +4,7 @@ export interface Manager {
   id: number;
   face: string;
   rarity: Rarity;
+  trait: string;
   efficiency: number;
   salary: number;
   desc: string;
